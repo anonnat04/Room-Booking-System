@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจองห้องพัก | CPE Hotel</title>
+    
+    <!-- Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Flatpickr (Beautiful Calendar) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://npmcdn.com/flatpickr/dist/themes/material_blue.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/th.js"></script>
+
+    <!-- SweetAlert2 (Beautiful Alerts) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6', 
+                        secondary: '#9333EA',
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9', // Sky 500
+                            600: '#0284c7', // Sky 600
+                            900: '#0c4a6e',
+                        },
+                        accent: {
+                            500: '#8b5cf6', // Violet
+                            600: '#7c3aed',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                    },
+                    animation: {
+                        'blob': 'blob 7s infinite',
+                        'fade-up': 'fadeUp 0.5s ease-out forwards',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        fadeUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+        
+        /* Glassmorphism Classes */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Print Styles */
+        @media print {
+            body * { visibility: hidden; }
+            #receiptArea, #receiptArea * { visibility: visible; }
+            #receiptArea { position: fixed; left: 0; top: 0; width: 100%; height: 100%; z-index: 9999; background: white; padding: 20px; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen relative overflow-x-hidden text-slate-800">
+
+    <!-- Animated Background Blobs -->
+    <div class="fixed inset-0 w-full h-full -z-10 overflow-hidden pointer-events-none">
+        <div class="absolute top-0 left-1/4 w-96 h-96 bg-brand-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+        <div class="absolute top-0 right-1/4 w-96 h-96 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+        <div class="absolute -bottom-8 left-1/3 w-96 h-96 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="glass-panel sticky top-0 z-40 transition-all duration-300 border-b border-white/40">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-accent-600 flex items-center justify-center text-white shadow-lg shadow-brand-500/30">
+                        <i class="fa-solid fa-hotel text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold bg-gradient-to-r from-brand-600 to-accent-600 bg-clip-text text-transparent">CPE HOTEL</h1>
+                        <p class="text-[10px] text-slate-500 font-medium tracking-wider uppercase">Premium Booking System</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <!-- User Profile -->
+                    <div class="hidden md:flex items-center gap-3 px-4 py-1.5 rounded-full bg-white/50 border border-white shadow-sm">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-brand-500 to-purple-500 text-white flex items-center justify-center font-bold text-sm" id="userAvatar">?</div>
+                        <span id="userName" class="text-sm font-semibold text-slate-600">กำลังโหลด...</span>
+                    </div>
+                    
+                    <button onclick="showBookings()" class="p-2.5 rounded-full bg-white hover:bg-brand-50 text-slate-600 transition-colors border border-slate-200 relative group">
+                        <i class="fa-solid fa-receipt text-lg group-hover:text-brand-500 transition-colors"></i>
+                        <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-brand-500"></span>
+                        </span>
+                    </button>
+                    
+                    <button onclick="logout()" class="p-2.5 rounded-full bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition-colors border border-slate-200">
+                        <i class="fa-solid fa-power-off text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 py-10">
+        
+        <!-- Search & Filter Bar -->
+        <div class="glass-panel rounded-3xl p-6 mb-12 shadow-xl shadow-brand-900/5 animate-fade-up">
+            <h2 class="text-xl font-bold text-slate-700 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-magnifying-glass text-brand-500"></i> ค้นหาห้องพัก
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                <div class="md:col-span-5 relative group">
+                    <i class="fa-solid fa-search absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-hover:text-brand-500 transition-colors"></i>
+                    <input type="text" id="searchInput" onkeyup="filterRooms()" 
+                        placeholder="พิมพ์ชื่อห้อง หรือประเภท..." 
+                        class="w-full pl-12 pr-4 py-4 bg-white/80 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-all outline-none text-slate-600 placeholder-slate-400 shadow-sm">
+                </div>
+                
+                <div class="md:col-span-4 relative group">
+                    <i class="fa-solid fa-filter absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-hover:text-brand-500 transition-colors"></i>
+                    <select id="typeFilter" onchange="filterRooms()" 
+                        class="w-full pl-12 pr-10 py-4 bg-white/80 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-brand-500 outline-none appearance-none cursor-pointer text-slate-600 shadow-sm">
+                        <option value="all">ห้องพักทุกประเภท</option>
+                        <option value="VIP">VIP</option>
+                        <option value="Standard">Standard</option>
+                        <option value="Deluxe">Deluxe</option>
+                        <option value="Suite">Suite</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                </div>
+                
+                <div class="md:col-span-3 relative">
+                    <select id="priceSort" onchange="filterRooms()" 
+                        class="w-full px-6 py-4 bg-gradient-to-r from-brand-600 to-accent-600 text-white font-semibold rounded-2xl outline-none cursor-pointer shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50 transition-all appearance-none text-center">
+                        <option value="default" class="text-slate-800 bg-white">✨ แนะนำ</option>
+                        <option value="low" class="text-slate-800 bg-white">ราคา: ต่ำ → สูง</option>
+                        <option value="high" class="text-slate-800 bg-white">ราคา: สูง → ต่ำ</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-white pointer-events-none"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Room Grid -->
+        <div id="roomContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-20">
+            <!-- Room Cards will be injected here via JS -->
+        </div>
+
+    </main>
+
+    <!-- Full Screen Image Viewer (Modern Lightbox) -->
+    <div id="imageViewer" class="fixed inset-0 z-[60] bg-black/95 hidden flex flex-col justify-center items-center backdrop-blur-sm transition-opacity duration-300 opacity-0">
+        <button onclick="closeImageViewer()" class="absolute top-6 right-6 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full text-white flex items-center justify-center transition-all z-50">
+            <i class="fa-solid fa-xmark text-2xl"></i>
+        </button>
+        
+        <div class="w-full h-full flex items-center justify-center p-4">
+            <img id="fullImage" src="" class="max-h-[85vh] max-w-[90vw] object-contain rounded-lg shadow-2xl animate-fade-up">
+        </div>
+        
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-4 overflow-x-auto p-2" id="thumbnailContainer">
+            <!-- Thumbnails injected here -->
+        </div>
+    </div>
+
+    <!-- Booking Modal (With Beautiful Flatpickr Calendar) -->
+    <div id="bookModal" class="fixed inset-0 z-50 hidden">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeBookModal()"></div>
+        
+        <!-- Modal Content -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-5xl p-4">
+            <div class="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col lg:flex-row max-h-[90vh]">
+                
+                <!-- Left: Room Info -->
+                <div class="lg:w-2/5 bg-slate-50 p-8 flex flex-col border-r border-slate-100 overflow-y-auto">
+                    <h3 class="text-2xl font-bold text-slate-800 mb-1">ทำการจอง</h3>
+                    <p class="text-slate-400 text-sm mb-6">กรุณาเลือกวันที่เข้าพัก</p>
+
+                    <div class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 mb-6">
+                        <img id="bookRoomImg" src="" class="w-full h-48 object-cover rounded-2xl mb-4 shadow-inner" onerror="this.src='https://via.placeholder.com/400x300'">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span id="bookRoomType" class="text-xs font-bold text-brand-500 uppercase tracking-wider bg-brand-50 px-2 py-1 rounded-md">TYPE</span>
+                                <h4 id="bookRoomName" class="text-xl font-bold text-slate-800 mt-1">Room -</h4>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-2xl font-bold text-slate-800" id="bookRoomRate">฿0</p>
+                                <p class="text-xs text-slate-400">/ คืน</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-auto space-y-3">
+                         <!-- Hidden inputs for form submission -->
+                         <input type="hidden" id="checkIn">
+                         <input type="hidden" id="checkOut">
+
+                         <div class="flex justify-between text-sm">
+                            <span class="text-slate-500">เข้าพัก (Check-in)</span>
+                            <span id="summaryCheckIn" class="font-medium text-slate-800">-</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500">ออก (Check-out)</span>
+                            <span id="summaryCheckOut" class="font-medium text-slate-800">-</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-slate-500">จำนวนคืน</span>
+                            <span id="summaryNights" class="font-medium text-slate-800">0 คืน</span>
+                        </div>
+                        <div class="border-t border-dashed border-slate-300 my-4"></div>
+                        <div class="flex justify-between items-end">
+                            <span class="font-bold text-slate-600">ยอดรวมทั้งสิ้น</span>
+                            <span id="summaryTotal" class="text-2xl font-bold text-brand-600">฿0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Calendar & Actions -->
+                <div class="lg:w-3/5 p-8 bg-white flex flex-col">
+                    <div class="flex-1 flex flex-col items-center justify-center">
+                        <label class="block text-slate-700 font-semibold mb-4 w-full text-left"><i class="fa-regular fa-calendar mr-2"></i>เลือกช่วงเวลาเข้าพัก</label>
+                        <!-- Flatpickr Container -->
+                        <div class="w-full flex justify-center bg-slate-50 rounded-3xl p-4 border border-slate-100">
+                             <input type="text" id="dateRangePicker" class="hidden"> <!-- Hidden Input -->
+                             <div id="inlineCalendar"></div> <!-- Visual Calendar -->
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4 mt-8 pt-6 border-t border-slate-100">
+                        <button onclick="closeBookModal()" class="px-6 py-4 rounded-xl font-bold text-slate-500 hover:bg-slate-50 transition-colors">
+                            ยกเลิก
+                        </button>
+                        <button onclick="confirmBooking()" class="flex-1 bg-gradient-to-r from-brand-600 to-accent-600 text-white py-4 rounded-xl font-bold shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50 hover:-translate-y-1 transition-all flex items-center justify-center gap-2">
+                            <span>ยืนยันการจอง</span> <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Bookings Modal (With Print) -->
+    <div id="bookingsModal" class="fixed inset-0 z-50 hidden flex justify-end">
+        <div class="absolute inset-0 bg-slate-900/30 backdrop-blur-sm transition-opacity" onclick="closeBookingsModal()"></div>
+        
+        <div class="relative w-full max-w-md h-full bg-white shadow-2xl flex flex-col animate-slide-left">
+            <div class="p-6 bg-gradient-to-br from-brand-600 to-accent-600 text-white flex justify-between items-center shadow-lg z-10">
+                <div>
+                    <h2 class="text-xl font-bold">ประวัติการจอง</h2>
+                    <p class="text-brand-100 text-sm">รายการจองทั้งหมดของคุณ</p>
+                </div>
+                <button onclick="closeBookingsModal()" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+            
+            <div id="bookingsList" class="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50 custom-scrollbar">
+                <!-- Items Injected Here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Receipt Template for Printing -->
+    <div id="receiptArea" class="hidden bg-white p-8">
+        <div class="border-2 border-slate-800 p-8 max-w-3xl mx-auto mt-10">
+            <div class="flex justify-between items-start mb-8 border-b-2 border-slate-800 pb-6">
+                <div class="flex items-center gap-4">
+                    <div class="text-4xl text-slate-800"><i class="fa-solid fa-hotel"></i></div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-slate-900">CPE HOTEL</h1>
+                        <p class="text-slate-600">ใบเสร็จรับเงิน / ใบยืนยันการจอง</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="font-bold text-lg">RECEIPT</p>
+                    <p class="text-slate-500" id="printDate">Date: -</p>
+                    <p class="text-slate-500" id="printBookID">ID: -</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-8 mb-8">
+                <div>
+                    <h3 class="font-bold text-slate-900 mb-2 uppercase text-sm border-b border-slate-300 pb-1">ข้อมูลลูกค้า</h3>
+                    <p class="text-lg font-medium" id="printName">-</p>
+                    <p class="text-slate-600" id="printUserType">Guest User</p>
+                </div>
+                <div class="text-right">
+                    <h3 class="font-bold text-slate-900 mb-2 uppercase text-sm border-b border-slate-300 pb-1">สถานะการชำระเงิน</h3>
+                    <p class="text-lg font-bold text-green-600 uppercase" id="printStatus">PAID</p>
+                </div>
+            </div>
+
+            <table class="w-full mb-8">
+                <thead class="bg-slate-100 border-y border-slate-300">
+                    <tr>
+                        <th class="py-3 text-left pl-4">รายการ</th>
+                        <th class="py-3 text-center">ระยะเวลา</th>
+                        <th class="py-3 text-right pr-4">จำนวนเงิน</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200" id="printItems">
+                    <!-- Items -->
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="2" class="pt-4 text-right font-bold pr-4">รวมทั้งสิ้น</td>
+                        <td class="pt-4 text-right font-bold text-xl pr-4" id="printTotal">-</td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div class="text-center text-slate-500 text-sm mt-12 pt-8 border-t border-slate-200">
+                <p>ขอบคุณที่ใช้บริการ CPE Hotel</p>
+                <p>นี่คือเอกสารที่สร้างจากระบบคอมพิวเตอร์</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- State Management ---
+        let allRooms = [];
+        let selectedRoom = null;
+        let currentUser = null;
+        let currentUserData = null; // เก็บข้อมูลผู้ใช้แบบเต็ม
+        let fpInstance = null; // Flatpickr Instance
+        let currentBookings = []; // Store fetched bookings for printing
+
+        // --- Authentication & Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Application starting...');
+            
+            // Set timeout เพื่อป้องกันการโหลดค้าง
+            const loadingTimeout = setTimeout(() => {
+                console.error('⏰ Loading timeout - API ไม่ตอบกลับ');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'การเชื่อมต่อล้มเหลว',
+                    html: `
+                        <p>ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้</p>
+                        <br>
+                        <p class="text-sm text-slate-600">กรุณาตรวจสอบ:</p>
+                        <ul class="text-sm text-left mt-2 ml-6">
+                            <li>✓ เปิด MySQL แล้วหรือยัง?</li>
+                            <li>✓ รัน <code class="bg-slate-100 px-2 py-1 rounded">node server.js</code> แล้วหรือยัง?</li>
+                            <li>✓ Server ทำงานที่ <code class="bg-slate-100 px-2 py-1 rounded">localhost:3000</code> หรือไม่?</li>
+                        </ul>
+                    `,
+                    confirmButtonColor: '#0ea5e9',
+                    footer: '<a href="/login" style="color: #0ea5e9;">กลับสู่หน้า Login</a>'
+                });
+            }, 10000); // 10 วินาที
+            
+            checkAuth().finally(() => {
+                clearTimeout(loadingTimeout);
+            });
+            
+            initCalendar();
+        });
+
+        async function checkAuth() {
+            try {
+                console.log('🔍 Checking authentication...');
+                
+                // เช็คว่าล็อกอินหรือยัง
+                const response = await fetch("/api/auth/check-session", {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('✅ Session check result:', data);
+                
+                if (!data.loggedIn || data.userType !== 'user') {
+                    console.log('❌ Not logged in, redirecting to login...');
+                    window.location.href = "/login";
+                    return;
+                }
+
+                currentUser = data.userId;
+                console.log('👤 Current user:', currentUser);
+                
+                // ดึงข้อมูลผู้ใช้จริงจาก API  
+                // ใช้ /profile แทน /api/user/:id เพราะ server.js ไม่มี endpoint นั้น
+                const userResponse = await fetch(`/profile`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!userResponse.ok) {
+                    throw new Error(`HTTP error! status: ${userResponse.status}`);
+                }
+                
+                const userData = await userResponse.json();
+                console.log('📋 User data:', userData);
+                
+                if (userData.success) {
+                    currentUserData = userData.user;
+                    const fullName = `${userData.user.Name} ${userData.user.LastName}`;
+                    document.getElementById('userName').textContent = fullName;
+                    document.getElementById('userAvatar').textContent = userData.user.Name.charAt(0).toUpperCase();
+                    console.log('✅ User loaded:', fullName);
+                } else {
+                    // Fallback
+                    document.getElementById('userName').textContent = 'ผู้ใช้';
+                    document.getElementById('userAvatar').textContent = 'U';
+                    console.warn('⚠️ User data not found, using fallback');
+                }
+
+                loadRooms();
+            } catch (error) {
+                console.error("❌ Auth check error:", error);
+                
+                // แสดง error ที่ละเอียดกว่า
+                const errorMessage = error.message.includes('Failed to fetch') 
+                    ? 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้\n\nกรุณาตรวจสอบ:\n1. เปิด MySQL แล้วหรือยัง?\n2. รัน "node server.js" แล้วหรือยัง?\n3. Server ทำงานที่ port 3000 หรือไม่?'
+                    : `ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้\n\nError: ${error.message}`;
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    html: errorMessage.replace(/\n/g, '<br>'),
+                    confirmButtonColor: '#0ea5e9',
+                    footer: '<a href="/login" style="color: #0ea5e9;">กลับสู่หน้า Login</a>'
+                });
+            }
+        }
+
+        async function loadRooms() {
+            const container = document.getElementById('roomContainer');
+            
+            // แสดง Loading State
+            container.innerHTML = `
+                <div class="col-span-full flex flex-col items-center justify-center py-20">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600 mb-4"></div>
+                    <p class="text-slate-600 font-medium">กำลังโหลดข้อมูลห้องพัก...</p>
+                </div>
+            `;
+            
+            try {
+                console.log('🏨 Loading rooms from:', window.location.origin + '/api/rooms');
+                
+                const response = await fetch("/api/rooms", {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                console.log('📡 Response status:', response.status, response.statusText);
+
+                if (!response.ok) {
+                    // ลองดูว่า response มี error message อะไร
+                    let errorData;
+                    try {
+                        errorData = await response.json();
+                    } catch (e) {
+                        errorData = { message: response.statusText };
+                    }
+                    
+                    console.error('❌ API Error:', errorData);
+                    throw new Error(`HTTP ${response.status}: ${errorData.message || response.statusText}`);
+                }
+
+                const data = await response.json();
+                console.log('✅ Rooms loaded:', data);
+
+                if (data.success) {
+                    if (data.rooms && data.rooms.length > 0) {
+                        allRooms = data.rooms;
+                        displayRooms(allRooms);
+                    } else {
+                        // ไม่มีห้องว่าง
+                        container.innerHTML = `
+                            <div class="col-span-full flex flex-col items-center justify-center py-20 text-slate-400">
+                                <i class="fa-solid fa-door-closed text-4xl text-slate-300 mb-4"></i>
+                                <p class="text-xl font-bold text-slate-600 mb-2">ไม่มีห้องว่างในขณะนี้</p>
+                                <p class="text-sm text-slate-500">กรุณาลองใหม่ภายหลัง</p>
+                            </div>
+                        `;
+                    }
+                } else {
+                    throw new Error(data.message || 'ไม่สามารถโหลดข้อมูลห้องพักได้');
+                }
+            } catch (error) {
+                console.error("❌ Load rooms error:", error);
+                
+                // ตรวจสอบว่าเป็น 404 หรือไม่
+                const is404 = error.message.includes('404');
+                const isUnauth = error.message.includes('401') || error.message.includes('Unauthorized');
+                
+                let errorMessage = error.message;
+                let suggestion = '';
+                
+                if (is404) {
+                    errorMessage = 'ไม่พบ API endpoint';
+                    suggestion = 'กรุณาตรวจสอบว่า server.js มี route /api/rooms หรือไม่';
+                } else if (isUnauth) {
+                    errorMessage = 'Session หมดอายุ';
+                    suggestion = 'กรุณาล็อกอินใหม่อีกครั้ง';
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 2000);
+                } else if (error.message.includes('Failed to fetch')) {
+                    errorMessage = 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์';
+                    suggestion = 'กรุณาตรวจสอบว่า server.js กำลังทำงานอยู่หรือไม่';
+                }
+                
+                container.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-20 text-slate-400">
+                        <i class="fa-solid fa-exclamation-triangle text-4xl text-rose-400 mb-4"></i>
+                        <p class="text-xl font-bold text-slate-600 mb-2">${errorMessage}</p>
+                        <p class="text-sm text-slate-500 mb-6 text-center max-w-md">${suggestion}</p>
+                        <div class="flex gap-3">
+                            <button onclick="loadRooms()" class="px-6 py-3 bg-brand-600 text-white rounded-xl font-bold hover:bg-brand-700 transition-colors">
+                                <i class="fa-solid fa-rotate-right mr-2"></i>ลองใหม่อีกครั้ง
+                            </button>
+                            ${isUnauth ? '' : `
+                                <button onclick="window.location.href='/login'" class="px-6 py-3 bg-slate-500 text-white rounded-xl font-bold hover:bg-slate-600 transition-colors">
+                                    กลับสู่หน้า Login
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+                
+                // แสดง Toast แทน Swal เพื่อไม่ให้รบกวน
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                });
+                
+                Toast.fire({
+                    icon: 'error',
+                    title: errorMessage
+                });
+            }
+        }
+
+        // --- UI Rendering (Modern Cards) ---
+        function displayRooms(rooms) {
+            const container = document.getElementById('roomContainer');
+            
+            if (rooms.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-20 text-slate-400">
+                        <i class="fa-solid fa-search text-4xl text-slate-300 mb-4"></i>
+                        <p class="text-xl font-bold text-slate-600">ไม่พบห้องพักที่คุณค้นหา</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = rooms.map((room, index) => {
+                const isAvailable = room.Status === 'ว่าง';
+                const delay = index * 100; // Stagger animation
+                
+                return `
+                <div class="glass-card rounded-[2rem] overflow-hidden group hover:-translate-y-2 hover:shadow-2xl hover:shadow-brand-500/20 transition-all duration-500 flex flex-col h-full animate-fade-up" style="animation-delay: ${delay}ms">
+                    <div class="relative h-72 overflow-hidden cursor-pointer" onclick="openImageViewer('${room.Room_No}')">
+                        <img src="${room.Image1 || 'https://via.placeholder.com/400x300'}" 
+                             class="w-full h-full object-cover group-hover:scale-110 transition duration-700 ease-in-out"
+                             onerror="this.src='https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80'">
+                        <div class="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors"></div>
+                        <div class="absolute top-4 left-4">
+                             <span class="bg-white/90 backdrop-blur text-slate-800 px-3 py-1.5 rounded-full text-xs font-bold shadow-md tracking-wide flex items-center gap-1">
+                                <i class="fa-solid fa-star text-yellow-400"></i> ${room.Type}
+                             </span>
+                        </div>
+                        <div class="absolute top-4 right-4">
+                            ${isAvailable 
+                                ? '<span class="bg-emerald-500 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg shadow-emerald-500/30">ว่าง</span>' 
+                                : '<span class="bg-rose-500 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg shadow-rose-500/30">ไม่ว่าง</span>'}
+                        </div>
+                        
+                        <!-- Hover Action -->
+                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-300">
+                            <span class="bg-white/30 backdrop-blur-md border border-white text-white px-6 py-2 rounded-full font-bold transform scale-90 group-hover:scale-100 transition">
+                                <i class="fa-regular fa-eye mr-2"></i>ดูรูปภาพ
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="p-6 flex flex-col flex-1 relative bg-white/60">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-2xl font-bold text-slate-800">Room ${room.Room_No}</h3>
+                        </div>
+                        <p class="text-slate-500 text-sm line-clamp-2 mb-4 h-[40px]">${room.Description || 'ไม่มีรายละเอียดเพิ่มเติม'}</p>
+                        
+                        <div class="mt-auto pt-4 border-t border-slate-100 flex items-center justify-between">
+                            <div>
+                                <p class="text-xs text-slate-400 font-bold uppercase">ราคาต่อคืน</p>
+                                <p class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-accent-600">฿${Number(room.Rate).toLocaleString()}</p>
+                            </div>
+                            
+                            ${isAvailable ? `
+                                <button onclick="openBookModal('${room.Room_No}')" 
+                                    class="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg hover:bg-brand-600 hover:shadow-brand-500/40 transition-all transform active:scale-95 flex items-center gap-2">
+                                    จองเลย <i class="fa-solid fa-angle-right"></i>
+                                </button>
+                            ` : `
+                                <button disabled class="bg-slate-200 text-slate-400 px-6 py-3 rounded-xl font-bold text-sm cursor-not-allowed">
+                                    จองไม่ได้
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // --- Filter ---
+        function filterRooms() {
+            const searchText = document.getElementById('searchInput').value.toLowerCase();
+            const typeFilter = document.getElementById('typeFilter').value;
+            const priceSort = document.getElementById('priceSort').value;
+
+            let filtered = allRooms.filter(room => {
+                const matchSearch = room.Room_No.toLowerCase().includes(searchText) || 
+                                   room.Type.toLowerCase().includes(searchText);
+                const matchType = typeFilter === 'all' || room.Type === typeFilter;
+                return matchSearch && matchType;
+            });
+
+            if (priceSort === 'low') {
+                filtered.sort((a, b) => parseFloat(a.Rate) - parseFloat(b.Rate));
+            } else if (priceSort === 'high') {
+                filtered.sort((a, b) => parseFloat(b.Rate) - parseFloat(a.Rate));
+            }
+
+            displayRooms(filtered);
+        }
+
+        // --- Image Viewer (Lightbox) ---
+        function openImageViewer(roomNo) {
+            const room = allRooms.find(r => r.Room_No === roomNo);
+            if(!room) return;
+
+            const viewer = document.getElementById('imageViewer');
+            const fullImg = document.getElementById('fullImage');
+            const thumbs = document.getElementById('thumbnailContainer');
+
+            // Collect available images
+            const images = [room.Image1, room.Image2, room.Image3, room.Image4].filter(x => x);
+            
+            if(images.length === 0) images.push('https://via.placeholder.com/800x600');
+
+            // Set Main Image
+            fullImg.src = images[0];
+
+            // Generate Thumbnails
+            thumbs.innerHTML = images.map(img => `
+                <img src="${img}" 
+                    class="w-16 h-16 object-cover rounded-lg border-2 border-white/50 hover:border-white cursor-pointer transition"
+                    onclick="document.getElementById('fullImage').src = '${img}'">
+            `).join('');
+
+            viewer.classList.remove('hidden');
+            setTimeout(() => viewer.classList.remove('opacity-0'), 10);
+        }
+
+        function closeImageViewer() {
+            const viewer = document.getElementById('imageViewer');
+            viewer.classList.add('opacity-0');
+            setTimeout(() => viewer.classList.add('hidden'), 300);
+        }
+
+        // --- Booking & Calendar Logic (With Flatpickr) ---
+        function initCalendar() {
+            fpInstance = flatpickr("#inlineCalendar", {
+                inline: true,
+                mode: "range",
+                minDate: "today",
+                dateFormat: "Y-m-d",
+                showMonths: 1,
+                locale: 'th',
+                onChange: function(selectedDates, dateStr, instance) {
+                    calculateSummary(selectedDates);
+                }
+            });
+        }
+
+        function openBookModal(roomNo) {
+            const room = allRooms.find(r => r.Room_No === roomNo);
+            if (!room || room.Status !== 'ว่าง') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ขออภัย',
+                    text: 'ห้องนี้ไม่สามารถจองได้',
+                    confirmButtonColor: '#0ea5e9'
+                });
+                return;
+            }
+            selectedRoom = room;
+            
+            // Update UI
+            document.getElementById('bookRoomName').innerText = `Room ${selectedRoom.Room_No}`;
+            document.getElementById('bookRoomType').innerText = selectedRoom.Type;
+            document.getElementById('bookRoomRate').innerText = `฿${Number(selectedRoom.Rate).toLocaleString()}`;
+            document.getElementById('bookRoomImg').src = selectedRoom.Image1 || 'https://via.placeholder.com/400x300';
+            
+            // Reset Values
+            fpInstance.clear();
+            document.getElementById('checkIn').value = '';
+            document.getElementById('checkOut').value = '';
+            calculateSummary([]);
+            
+            const modal = document.getElementById('bookModal');
+            modal.classList.remove('hidden');
+        }
+
+        function closeBookModal() {
+            document.getElementById('bookModal').classList.add('hidden');
+            selectedRoom = null;
+        }
+
+        function calculateSummary(dates) {
+            const checkInEl = document.getElementById('summaryCheckIn');
+            const checkOutEl = document.getElementById('summaryCheckOut');
+            const nightsEl = document.getElementById('summaryNights');
+            const totalEl = document.getElementById('summaryTotal');
+            const hiddenCheckIn = document.getElementById('checkIn');
+            const hiddenCheckOut = document.getElementById('checkOut');
+
+            if (dates.length === 2) {
+                const start = dates[0];
+                const end = dates[1];
+                const diffTime = Math.abs(end - start);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                
+                checkInEl.innerText = start.toLocaleDateString('th-TH');
+                checkOutEl.innerText = end.toLocaleDateString('th-TH');
+                nightsEl.innerText = `${diffDays} คืน`;
+                totalEl.innerText = `฿${(diffDays * selectedRoom.Rate).toLocaleString()}`;
+                
+                hiddenCheckIn.value = flatpickr.formatDate(start, "Y-m-d");
+                hiddenCheckOut.value = flatpickr.formatDate(end, "Y-m-d");
+
+            } else {
+                checkInEl.innerText = '-';
+                checkOutEl.innerText = '-';
+                nightsEl.innerText = '0 คืน';
+                totalEl.innerText = '฿0';
+                hiddenCheckIn.value = '';
+                hiddenCheckOut.value = '';
+            }
+        }
+
+        async function confirmBooking() {
+            if (!selectedRoom) return;
+            const checkIn = document.getElementById('checkIn').value;
+            const checkOut = document.getElementById('checkOut').value;
+
+            if (!checkIn || !checkOut) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'กรุณาเลือกวันเข้าพัก',
+                    text: 'ต้องเลือกวัน Check-in และ Check-out ให้ครบถ้วน',
+                    confirmButtonColor: '#0ea5e9'
+                });
+                return;
+            }
+
+            try {
+                const result = await Swal.fire({
+                    title: 'ยืนยันการจอง?',
+                    html: `คุณต้องการจองห้อง <strong>${selectedRoom.Room_No}</strong><br>
+                           วันที่ ${checkIn} ถึง ${checkOut}<br>
+                           ใช่หรือไม่?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#0ea5e9',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'ยืนยัน',
+                    cancelButtonText: 'ยกเลิก'
+                });
+
+                if (result.isConfirmed) {
+                    const response = await fetch('/api/booking', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            roomNo: selectedRoom.Room_No,
+                            checkIn: checkIn,
+                            checkOut: checkOut
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        await Swal.fire({
+                            icon: 'success',
+                            title: 'จองสำเร็จ!',
+                            text: 'ระบบได้รับคำขอจองของคุณแล้ว รอการอนุมัติจากผู้ดูแลระบบ',
+                            confirmButtonColor: '#0ea5e9'
+                        });
+                        closeBookModal();
+                        loadRooms();
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด',
+                            text: data.message || 'ไม่สามารถทำการจองได้',
+                            confirmButtonColor: '#0ea5e9'
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Booking error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',
+                    confirmButtonColor: '#0ea5e9'
+                });
+            }
+        }
+
+        // --- My Bookings & Receipt ---
+        async function showBookings() {
+            try {
+                const response = await fetch("/api/my-bookings");
+                const data = await response.json();
+
+                const list = document.getElementById('bookingsList');
+                const modal = document.getElementById('bookingsModal');
+
+                if (!data.success || data.bookings.length === 0) {
+                    list.innerHTML = `
+                        <div class="text-center text-slate-400 mt-10">
+                            <i class="fa-regular fa-calendar-xmark text-4xl mb-2"></i>
+                            <p>ยังไม่มีประวัติการจอง</p>
+                        </div>`;
+                    currentBookings = [];
+                } else {
+                    currentBookings = data.bookings;
+                    list.innerHTML = data.bookings.map(b => {
+                        let statusConfig = {
+                            'อนุมัติแล้ว': { bg: 'bg-emerald-100', text: 'text-emerald-700', badge: 'อนุมัติแล้ว' },
+                            'ยกเลิก': { bg: 'bg-rose-100', text: 'text-rose-700', badge: 'ยกเลิก' },
+                            'รออนุมัติ': { bg: 'bg-amber-100', text: 'text-amber-700', badge: 'รออนุมัติ' }
+                        };
+                        let st = statusConfig[b.Status] || statusConfig['รออนุมัติ'];
+
+                        // แสดงปุ่มปริ้นเฉพาะที่อนุมัติแล้ว
+                        const showPrintButton = b.Status === 'อนุมัติแล้ว';
+
+                        return `
+                        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-bold text-brand-600 font-mono">${b.Book_ID}</span>
+                                <span class="text-xs font-bold ${st.bg} ${st.text} px-2 py-1 rounded-md">${st.badge}</span>
+                            </div>
+                            <h4 class="font-bold text-slate-800">Room ${b.Room_No} (${b.TypeRoom})</h4>
+                            <div class="text-sm text-slate-500 mt-1 flex justify-between">
+                                <span>${b.Check_in} - ${b.Check_out}</span>
+                                <span>${b.Day} คืน</span>
+                            </div>
+                            <div class="flex justify-between items-center mt-3 pt-3 border-t border-slate-100">
+                                <span class="font-bold text-slate-800 text-lg">฿${Number(b.Total).toLocaleString()}</span>
+                                <div class="flex gap-2">
+                                    ${showPrintButton ? `
+                                        <button onclick="printReceipt('${b.Book_ID}')" class="w-8 h-8 rounded-full bg-brand-50 hover:bg-brand-100 text-brand-600 flex items-center justify-center transition" title="พิมพ์ใบเสร็จ">
+                                            <i class="fa-solid fa-print"></i>
+                                        </button>
+                                    ` : ''}
+                                    ${b.Status === 'รออนุมัติ' ? `
+                                        <button onclick="cancelBooking('${b.Book_ID}')" class="w-8 h-8 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-500 flex items-center justify-center transition" title="ยกเลิก">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `}).join('');
+                }
+
+                modal.classList.remove('hidden');
+            } catch (error) {
+                console.error("Show bookings error:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'ไม่สามารถโหลดประวัติการจองได้',
+                    confirmButtonColor: '#0ea5e9'
+                });
+            }
+        }
+
+        function closeBookingsModal() {
+            document.getElementById('bookingsModal').classList.add('hidden');
+        }
+
+        async function cancelBooking(bookId) {
+            const result = await Swal.fire({
+                title: 'ยืนยันการยกเลิก?',
+                text: "คุณไม่สามารถย้อนกลับได้!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'ใช่, ยกเลิกเลย',
+                cancelButtonText: 'ไม่ยกเลิก'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/api/bookings/${bookId}`, { 
+                        method: "DELETE" 
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        await Swal.fire({
+                            icon: 'success',
+                            title: 'ยกเลิกสำเร็จ!',
+                            text: 'ยกเลิกการจองเรียบร้อยแล้ว',
+                            confirmButtonColor: '#0ea5e9'
+                        });
+                        showBookings(); // Refresh list
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'เกิดข้อผิดพลาด',
+                            text: data.message || 'ไม่สามารถยกเลิกได้',
+                            confirmButtonColor: '#0ea5e9'
+                        });
+                    }
+                } catch (error) {
+                    console.error(error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',
+                        confirmButtonColor: '#0ea5e9'
+                    });
+                }
+            }
+        }
+
+        function printReceipt(bookId) {
+            const booking = currentBookings.find(b => b.Book_ID === bookId);
+            if (!booking) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ไม่พบข้อมูล',
+                    text: 'ไม่พบข้อมูลการจองนี้',
+                    confirmButtonColor: '#0ea5e9'
+                });
+                return;
+            }
+
+            // ตรวจสอบว่าอนุมัติแล้วหรือไม่
+            if (booking.Status !== 'อนุมัติแล้ว') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ไม่สามารถพิมพ์ได้',
+                    text: 'สามารถพิมพ์ใบเสร็จได้เฉพาะการจองที่อนุมัติแล้วเท่านั้น',
+                    confirmButtonColor: '#0ea5e9'
+                });
+                return;
+            }
+
+            // Fill Data
+            document.getElementById('printBookID').innerText = `ID: ${booking.Book_ID}`;
+            document.getElementById('printDate').innerText = `Date: ${new Date().toLocaleDateString('th-TH')}`;
+            
+            // ใช้ข้อมูลจริงจาก currentUserData
+            const fullName = currentUserData ? `${currentUserData.Name} ${currentUserData.LastName}` : document.getElementById('userName').innerText;
+            document.getElementById('printName').innerText = fullName;
+            document.getElementById('printUserType').innerText = 'ลูกค้า / Customer';
+            
+            document.getElementById('printStatus').innerText = 'PAID / CONFIRMED';
+            document.getElementById('printStatus').className = 'text-lg font-bold uppercase text-green-600';
+            document.getElementById('printTotal').innerText = `฿${Number(booking.Total).toLocaleString()}`;
+            
+            const tbody = document.getElementById('printItems');
+            tbody.innerHTML = `
+                <tr>
+                    <td class="py-3 pl-4">
+                        <p class="font-bold text-slate-800">ค่าห้องพัก Room ${booking.Room_No}</p>
+                        <p class="text-xs text-slate-500">${booking.TypeRoom} Room (${booking.Check_in} ถึง ${booking.Check_out})</p>
+                    </td>
+                    <td class="py-3 text-center">${booking.Day} คืน</td>
+                    <td class="py-3 text-right pr-4 font-bold">฿${Number(booking.Total).toLocaleString()}</td>
+                </tr>
+            `;
+
+            // แสดง receipt area
+            document.getElementById('receiptArea').classList.remove('hidden');
+            
+            // พิมพ์
+            setTimeout(() => {
+                window.print();
+                // ซ่อน receipt area หลังพิมพ์
+                setTimeout(() => {
+                    document.getElementById('receiptArea').classList.add('hidden');
+                }, 100);
+            }, 100);
+        }
+
+        function logout() {
+            Swal.fire({
+                title: 'ออกจากระบบ?',
+                text: 'คุณต้องการออกจากระบบหรือไม่?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'ออกจากระบบ',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch("/logout", { method: "POST" })
+                        .then(() => {
+                            window.location.href = "/login";
+                        })
+                        .catch(() => {
+                            window.location.href = "/login";
+                        });
+                }
+            });
+        }
+    </script>
+</body>
+</html>

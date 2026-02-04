@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ | Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap');
+        body { font-family: 'Kanit', sans-serif; }
+
+        .bg-mesh {
+            background-color: #f8fafc;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(147, 51, 234, 0.1) 0px, transparent 50%);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+
+        .btn-premium {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .btn-premium::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -100%;
+            width: 100%; height: 200%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: rotate(35deg);
+            transition: 0.5s;
+        }
+        .btn-premium:hover::after { left: 100%; }
+        
+        /* ปรับแต่ง Scrollbar เบื้องต้น */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-mesh min-h-screen flex items-center justify-center p-6">
+
+    <!-- ปุ่มกลับหน้าหลัก: ปรับขนาดให้กะทัดรัดขึ้น -->
+    <div class="absolute top-6 left-6 z-10">
+        <a href="index.html" class="flex items-center gap-2 text-slate-400 hover:text-blue-600 transition-all text-sm group">
+            <div class="w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:shadow-md transition-all border border-slate-100">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+            </div>
+            <span class="font-medium">กลับหน้าหลัก</span>
+        </a>
+    </div>
+
+    <!-- Login Card: ปรับความกว้างมาตรฐานที่ 400px เพื่อความสมดุล -->
+    <div class="glass-card animate__animated animate__fadeIn rounded-[2.5rem] shadow-2xl shadow-blue-900/5 p-8 w-full max-w-[400px] relative">
+        
+        <div class="text-center mb-8">
+            <div class="bg-gradient-to-br from-blue-500 to-purple-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-200 transform -rotate-3">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 00-2 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800 tracking-tight">เข้าสู่ระบบ</h2>
+            <p class="text-slate-400 text-sm mt-1.5">เข้าถึงบัญชีผู้ใช้ของคุณ</p>
+        </div>
+
+        <div id="alertBox" class="mb-5 text-sm"></div>
+
+        <form id="loginForm" class="space-y-5">
+            <!-- Email -->
+            <div>
+                <label for="mail" class="block text-[13px] font-semibold text-slate-600 mb-2 ml-1">อีเมลผู้ใช้งาน</label>
+                <input type="email" id="mail" name="mail" placeholder="example@gmail.com" required
+                    class="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 focus:bg-white transition-all outline-none text-sm text-slate-700">
+                <div id="err-mail" class="text-red-500 text-[11px] mt-1.5 ml-1 min-h-[14px]"></div>
+            </div>
+
+            <!-- Password -->
+            <div>
+                <label for="password" class="block text-[13px] font-semibold text-slate-600 mb-2 ml-1">รหัสผ่าน</label>
+                <div class="relative group">
+                    <input type="password" id="password" name="password" placeholder="••••••••" required
+                        class="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-purple-500/5 focus:border-purple-500 focus:bg-white transition-all outline-none text-sm text-slate-700">
+                    <button type="button" onclick="togglePassword()" class="absolute right-4 top-1/2 -translate-y-1/2 opacity-25 hover:opacity-100 transition-opacity">
+                        <span id="eyeIcon" class="text-lg">👁️</span>
+                    </button>
+                </div>
+                <div id="err-password" class="text-red-500 text-[11px] mt-1.5 ml-1 min-h-[14px]"></div>
+            </div>
+
+            <div class="flex items-center justify-between text-[12px] px-1">
+                <label class="flex items-center gap-2 text-slate-500 cursor-pointer">
+                    <input type="checkbox" id="remember" name="remember" class="w-4 h-4 border-slate-300 rounded text-blue-600 focus:ring-0">
+                    <span class="font-medium">จดจำฉันไว้</span>
+                </label>
+                <a href="./Forgot password.html" class="text-blue-600 hover:text-purple-600 font-bold transition-colors">ลืมรหัสผ่าน?</a>
+            </div>
+
+            <button type="submit" id="submitBtn"
+                class="btn-premium w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-[15px] font-bold rounded-2xl shadow-xl shadow-blue-500/20 hover:shadow-blue-500/30 transform active:scale-[0.98] mt-2">
+                เข้าสู่ระบบ
+            </button>
+        </form>
+
+        <!-- Loading State -->
+        <div id="loading" class="hidden text-center py-8">
+            <div class="inline-block w-9 h-9 border-[3px] border-slate-100 border-t-blue-600 rounded-full animate-spin"></div>
+            <p class="text-slate-500 text-sm mt-4 font-medium">กำลังดำเนินการ...</p>
+        </div>
+
+        <div class="text-center mt-8 pt-6 border-t border-slate-50">
+            <p class="text-slate-400 text-[13px]">ยังไม่มีบัญชีสมาชิกใช่ไหม?</p>
+            <a href="/register.html" class="inline-block mt-2 text-blue-600 font-bold text-[15px] hover:text-purple-600 transition-all">
+                สมัครสมาชิกใหม่
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // --- Logic ระบบเดิม ---
+
+        function togglePassword() {
+            const input = document.getElementById("password");
+            const eye = document.getElementById("eyeIcon");
+            input.type = input.type === "password" ? "text" : "password";
+            eye.innerText = input.type === "password" ? "👁️" : "🙈";
+        }
+
+        function showAlert(message, type = "error") {
+            const alertBox = document.getElementById("alertBox");
+            const bgColor = type === "error" ? "bg-red-50 text-red-600 border-red-100" : "bg-green-50 text-green-600 border-green-100";
+            alertBox.innerHTML = `<div class="${bgColor} border px-4 py-3 rounded-2xl text-center font-semibold animate__animated animate__fadeInDown">${message}</div>`;
+            setTimeout(() => { alertBox.innerHTML = ""; }, 5000);
+        }
+
+        function clearErrors() {
+            document.querySelectorAll('[id^="err-"]').forEach(el => el.textContent = "");
+            document.querySelectorAll('input').forEach(el => {
+                el.classList.remove('border-red-400', 'bg-red-50');
+            });
+        }
+
+        function showError(id, message) {
+            const errorEl = document.getElementById(id);
+            const inputId = id.replace("err-", "");
+            const inputEl = document.getElementById(inputId);
+            if (errorEl) errorEl.textContent = message;
+            if (inputEl) inputEl.classList.add('border-red-400', 'bg-red-50');
+        }
+
+        async function checkSession() {
+            try {
+                const response = await fetch("/check-session");
+                const data = await response.json();
+                if (data.authenticated) {
+                    window.location.href = data.isAdmin ? "/admin.html" : "/user.html";
+                }
+            } catch (error) {
+                console.error("Session check error:", error);
+            }
+        }
+
+        window.addEventListener("DOMContentLoaded", () => {
+            checkSession();
+            const savedEmail = localStorage.getItem("rememberedEmail");
+            if (savedEmail) {
+                document.getElementById("mail").value = savedEmail;
+                document.getElementById("remember").checked = true;
+            }
+        });
+
+        document.getElementById("loginForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            clearErrors();
+
+            const mail = document.getElementById("mail").value.trim();
+            const password = document.getElementById("password").value;
+            const remember = document.getElementById("remember").checked;
+
+            if (!mail) { showError("err-mail", "กรุณากรอกอีเมล"); return; }
+            if (!password) { showError("err-password", "กรุณากรอกรหัสผ่าน"); return; }
+
+            document.getElementById("submitBtn").disabled = true;
+            document.getElementById("loginForm").classList.add("hidden");
+            document.getElementById("loading").classList.remove("hidden");
+
+            try {
+                const response = await fetch("/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ mail, password })
+                });
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    document.getElementById("loginForm").classList.remove("hidden");
+                    document.getElementById("loading").classList.add("hidden");
+                    showAlert(result.message, "error");
+                    document.getElementById("submitBtn").disabled = false;
+                    return;
+                }
+
+                if (remember) {
+                    localStorage.setItem("rememberedEmail", mail);
+                } else {
+                    localStorage.removeItem("rememberedEmail");
+                }
+
+                showAlert("เข้าสู่ระบบสำเร็จ!", "success");
+                
+                setTimeout(() => {
+                    window.location.href = result.role === "admin" ? "/admin.html" : "/user.html";
+                }, 1000);
+
+            } catch (error) {
+                document.getElementById("loginForm").classList.remove("hidden");
+                document.getElementById("loading").classList.add("hidden");
+                showAlert("เกิดข้อผิดพลาดในการเชื่อมต่อ", "error");
+                document.getElementById("submitBtn").disabled = false;
+            }
+        });
+
+        document.getElementById("mail").addEventListener("input", function() {
+            const mail = this.value.trim();
+            if (mail && !/^[A-Za-z0-9._%+-]+@gmail\.com$/.test(mail)) {
+                showError("err-mail", "รูปแบบอีเมลไม่ถูกต้อง (@gmail.com)");
+            } else {
+                clearErrors();
+            }
+        });
+    </script>
+
+</body>
+</html>

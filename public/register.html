@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>สมัครสมาชิก - Secure Auth System</title>
+<!-- Google Fonts: Kanit -->
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Kanit', 'sans-serif'],
+          },
+          animation: {
+            'blob': 'blob 7s infinite',
+          },
+          keyframes: {
+            blob: {
+              '0%': { transform: 'translate(0px, 0px) scale(1)' },
+              '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+              '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+              '100%': { transform: 'translate(0px, 0px) scale(1)' },
+            }
+          }
+        }
+      }
+    }
+</script>
+<style>
+    /* ซ่อน Scrollbar */
+    body::-webkit-scrollbar { display: none; }
+    body { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    .glass-card {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+    
+    .input-modern {
+        background-color: #f9fafb;
+        transition: all 0.3s ease;
+    }
+    .input-modern:focus {
+        background-color: #ffffff;
+        box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+        border-color: #8b5cf6;
+    }
+</style>
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4 relative overflow-x-hidden font-sans selection:bg-purple-200 selection:text-purple-900">
+
+<!-- Background Decorative Blobs -->
+<div class="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+    <div class="absolute top-0 left-1/4 w-96 h-96 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+    <div class="absolute top-0 right-1/4 w-96 h-96 bg-indigo-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+    <div class="absolute -bottom-32 left-1/3 w-96 h-96 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
+</div>
+
+<div class="glass-card rounded-3xl shadow-2xl shadow-purple-900/10 p-8 w-full max-w-lg relative z-10">
+  
+  <!-- Header -->
+  <div class="text-center mb-8">
+    <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-purple-100 text-purple-600 mb-4 shadow-sm">
+        <span class="text-2xl">🔐</span>
+    </div>
+    <h2 class="text-3xl font-bold text-slate-800 tracking-tight">สมัครสมาชิก</h2>
+    <p class="text-slate-500 mt-2 text-sm font-light">เริ่มต้นใช้งานระบบ Secure Auth System</p>
+  </div>
+
+  <div id="successMessage" class="hidden bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl mb-6 text-center text-sm font-medium shadow-sm"></div>
+
+  <form id="registerForm" class="space-y-5">
+    
+    <!-- Grid for Name/Lastname -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label for="name" class="block text-sm font-medium text-slate-700 mb-1.5 ml-1">ชื่อ (Name) <span class="text-red-400">*</span></label>
+            <input type="text" id="name" name="name" placeholder="John"
+                class="input-modern w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none">
+            <div id="err-name" class="text-red-500 text-xs mt-1.5 ml-1 h-4"></div>
+        </div>
+
+        <div>
+            <label for="lastname" class="block text-sm font-medium text-slate-700 mb-1.5 ml-1">นามสกุล (Last Name) <span class="text-red-400">*</span></label>
+            <input type="text" id="lastname" name="lastname" placeholder="Doe"
+                class="input-modern w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none">
+            <div id="err-lastname" class="text-red-500 text-xs mt-1.5 ml-1 h-4"></div>
+        </div>
+    </div>
+
+    <div>
+      <label for="tel" class="block text-sm font-medium text-slate-700 mb-1.5 ml-1">เบอร์โทรศัพท์ (Phone) <span class="text-red-400">*</span></label>
+      <input type="tel" id="tel" name="tel" placeholder="0812345678"
+        class="input-modern w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none">
+      <div id="err-tel" class="text-red-500 text-xs mt-1.5 ml-1 h-4"></div>
+    </div>
+
+    <div>
+      <label for="mail" class="block text-sm font-medium text-slate-700 mb-1.5 ml-1">อีเมล (Email) <span class="text-red-400">*</span></label>
+      <input type="email" id="mail" name="mail" placeholder="example@gmail.com"
+        class="input-modern w-full px-4 py-2.5 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none">
+      <div id="err-mail" class="text-red-500 text-xs mt-1.5 ml-1 h-4"></div>
+    </div>
+
+    <div>
+      <label for="password" class="block text-sm font-medium text-slate-700 mb-1.5 ml-1">รหัสผ่าน (Password) <span class="text-red-400">*</span></label>
+      <div class="relative group">
+        <input type="password" id="password" name="password" placeholder="••••••••"
+          class="input-modern w-full px-4 py-2.5 pr-12 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none">
+        <button type="button" onclick="togglePassword('password')" 
+          class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors cursor-pointer">
+          <span class="text-lg leading-none">👁️</span>
+        </button>
+      </div>
+      
+      <!-- Strength Bar Style Update -->
+      <div class="mt-2 h-1.5 bg-slate-100 rounded-full overflow-hidden w-full">
+        <div id="strengthBar" class="h-full w-0 transition-all duration-500 ease-out rounded-full"></div>
+      </div>
+      <div id="strengthText" class="text-xs mt-1.5 ml-1 font-medium text-slate-500 min-h-[1rem]"></div>
+      <div id="err-password" class="text-red-500 text-xs ml-1 h-4"></div>
+    </div>
+
+    <div>
+      <label for="confirm" class="block text-sm font-medium text-slate-700 mb-1.5 ml-1">ยืนยันรหัสผ่าน (Confirm Password) <span class="text-red-400">*</span></label>
+      <div class="relative">
+        <input type="password" id="confirm" name="confirm_password" placeholder="••••••••"
+          class="input-modern w-full px-4 py-2.5 pr-12 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none">
+        <button type="button" onclick="togglePassword('confirm')" 
+          class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors cursor-pointer">
+          <span class="text-lg leading-none">👁️</span>
+        </button>
+      </div>
+      <div id="err-confirm" class="text-red-500 text-xs mt-1.5 ml-1 h-4"></div>
+    </div>
+
+    <button
+      type="submit"
+      id="submitBtn"
+      class="w-full mt-2 relative inline-flex items-center justify-center px-8 py-3.5 
+             overflow-hidden font-semibold text-white transition-all duration-300 ease-out 
+             rounded-xl group disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 hover:-translate-y-0.5"
+    >
+      <span class="absolute inset-0 w-full h-full bg-gradient-to-br from-purple-600 to-indigo-600 group-hover:from-purple-500 group-hover:to-indigo-500 transition-all duration-300"></span>
+      <span class="relative flex items-center gap-2">
+        สมัครสมาชิก
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+        </svg>
+      </span>
+    </button>
+  </form>
+
+  <div id="loading" class="hidden flex flex-col items-center justify-center py-8">
+    <div class="relative w-12 h-12">
+        <div class="absolute top-0 left-0 w-full h-full border-4 border-purple-100 rounded-full"></div>
+        <div class="absolute top-0 left-0 w-full h-full border-4 border-purple-600 rounded-full animate-spin border-t-transparent"></div>
+    </div>
+    <p class="text-slate-500 mt-4 text-sm font-medium animate-pulse">กำลังตรวจสอบข้อมูล...</p>
+  </div>
+
+  <div class="text-center mt-8 pt-6 border-t border-slate-100">
+    <p class="text-sm text-slate-500">
+      มีบัญชีอยู่แล้ว? 
+      <a href="/login.html" class="text-purple-600 font-semibold hover:text-purple-800 hover:underline transition-colors ml-1">
+        เข้าสู่ระบบ
+      </a>
+    </p>
+  </div>
+</div>
+
+<!-- SCRIPT ZONE: Original logic preserved exactly as requested -->
+<script>
+function togglePassword(id) {
+  const input = document.getElementById(id);
+  input.type = input.type === "password" ? "text" : "password";
+}
+
+function clearErrors() {
+  document.querySelectorAll('[id^="err-"]').forEach(el => el.textContent = "");
+  document.querySelectorAll('input').forEach(el => {
+    // Note: Adjusted class removal to match new styles logic if needed, 
+    // but preserving original class names for compatibility logic.
+    el.classList.remove('border-red-500', 'bg-red-50'); 
+  });
+}
+
+function showError(id, message) {
+  const errorEl = document.getElementById(id);
+  const inputEl = document.getElementById(id.replace("err-", ""));
+  errorEl.textContent = message;
+  if (inputEl) {
+    // Using Tailwind classes for error state
+    inputEl.classList.add('border-red-500', 'bg-red-50');
+  }
+}
+
+function checkPasswordStrength(password) {
+  let strength = 0;
+  const strengthBar = document.getElementById("strengthBar");
+  const strengthText = document.getElementById("strengthText");
+
+  if (password.length >= 8) strength++;
+  if (password.length >= 12) strength++;
+  if (/[a-z]/.test(password)) strength++;
+  if (/[A-Z]/.test(password)) strength++;
+  if (/[0-9]/.test(password)) strength++;
+  if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+  // Updated colors to match modern pastel theme slightly better but kept logic
+  const colors = ["bg-red-500", "bg-orange-500", "bg-yellow-500", "bg-teal-500", "bg-green-500"];
+  const texts = ["อ่อนมาก", "อ่อน", "ปานกลาง", "แข็งแรง", "แข็งแรงมาก"];
+  const widths = ["w-1/5", "w-2/5", "w-3/5", "w-4/5", "w-full"];
+
+  const index = Math.min(strength - 1, 4);
+  
+  // Logic preserved
+  strengthBar.className = `h-full transition-all duration-300 rounded-full ${colors[index]} ${widths[index]}`;
+  
+  if (password.length > 0) {
+    strengthText.textContent = `ความแข็งแรง: ${texts[index]}`;
+    strengthText.className = `text-xs mt-1.5 ml-1 font-medium ${colors[index].replace('bg-', 'text-')}`;
+  } else {
+    strengthBar.className = "h-full w-0";
+    strengthText.textContent = "";
+  }
+}
+
+document.getElementById("password").addEventListener("input", (e) => {
+  checkPasswordStrength(e.target.value);
+});
+
+document.getElementById("registerForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  clearErrors();
+
+  let isValid = true;
+
+  const name = document.getElementById("name").value.trim();
+  const lastname = document.getElementById("lastname").value.trim();
+  const tel = document.getElementById("tel").value.trim();
+  const mail = document.getElementById("mail").value.trim();
+  const password = document.getElementById("password").value;
+  const confirm = document.getElementById("confirm").value;
+
+  if (!name) {
+    showError("err-name", "กรุณากรอกชื่อ");
+    isValid = false;
+  } else if (!/^[A-Za-z]+$/.test(name)) {
+    showError("err-name", "ชื่อใช้ได้เฉพาะภาษาอังกฤษ");
+    isValid = false;
+  }
+
+  if (!lastname) {
+    showError("err-lastname", "กรุณากรอกนามสกุล");
+    isValid = false;
+  } else if (!/^[A-Za-z]+$/.test(lastname)) {
+    showError("err-lastname", "นามสกุลใช้ได้เฉพาะภาษาอังกฤษ");
+    isValid = false;
+  }
+
+  if (!tel) {
+    showError("err-tel", "กรุณากรอกเบอร์โทรศัพท์");
+    isValid = false;
+  } else if (!/^\d+$/.test(tel)) {
+    showError("err-tel", "เบอร์โทรต้องเป็นตัวเลขเท่านั้น");
+    isValid = false;
+  } else if (tel.length < 9 || tel.length > 10) {
+    showError("err-tel", "เบอร์โทรต้อง 9-10 หลัก");
+    isValid = false;
+  }
+
+  if (!mail) {
+    showError("err-mail", "กรุณากรอกอีเมล");
+    isValid = false;
+  } else if (!/^\S+@\S+\.\S+$/.test(mail)) {
+    showError("err-mail", "รูปแบบอีเมลไม่ถูกต้อง");
+    isValid = false;
+  }
+
+  if (!password) {
+    showError("err-password", "กรุณากรอกรหัสผ่าน");
+    isValid = false;
+  } else if (password.length < 8) {
+    showError("err-password", "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร");
+    isValid = false;
+  } else if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
+    showError("err-password", "รหัสผ่านต้องมีตัวพิมพ์ใหญ่ เล็ก และตัวเลข");
+    isValid = false;
+  }
+
+  if (!confirm) {
+    showError("err-confirm", "กรุณายืนยันรหัสผ่าน");
+    isValid = false;
+  } else if (password !== confirm) {
+    showError("err-confirm", "รหัสผ่านไม่ตรงกัน");
+    isValid = false;
+  }
+
+  if (!isValid) return;
+
+  document.getElementById("submitBtn").disabled = true;
+  document.getElementById("registerForm").classList.add("hidden");
+  document.getElementById("loading").classList.remove("hidden");
+
+  try {
+    const response = await fetch("/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name, lastname, tel, mail, password, confirm_password: confirm
+      })
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      document.getElementById("registerForm").classList.remove("hidden");
+      document.getElementById("loading").classList.add("hidden");
+      
+      if (result.field) {
+        showError("err-" + result.field, result.message);
+      } else {
+        alert(result.message);
+      }
+      return;
+    }
+
+    document.getElementById("successMessage").textContent = "✅ " + result.message;
+    document.getElementById("successMessage").classList.remove("hidden");
+    document.getElementById("loading").classList.add("hidden");
+    
+    setTimeout(() => {
+      window.location.href = "/login.html";
+    }, 1500);
+
+  } catch (error) {
+    document.getElementById("registerForm").classList.remove("hidden");
+    document.getElementById("loading").classList.add("hidden");
+    alert("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
+    console.error(error);
+  } finally {
+    document.getElementById("submitBtn").disabled = false;
+  }
+});
+
+function validateName() {
+  const name = document.getElementById("name").value.trim();
+  if (!name) {
+    showError("err-name", "กรุณากรอกชื่อ");
+    return false;
+  } else if (!/^[A-Za-z]+$/.test(name)) {
+    showError("err-name", "ชื่อใช้ได้เฉพาะภาษาอังกฤษ");
+    return false;
+  }
+  document.getElementById("err-name").textContent = "";
+  return true;
+}
+
+function validateLastname() {
+  const lastname = document.getElementById("lastname").value.trim();
+  if (!lastname) {
+    showError("err-lastname", "กรุณากรอกนามสกุล");
+    return false;
+  } else if (!/^[A-Za-z]+$/.test(lastname)) {
+    showError("err-lastname", "นามสกุลใช้ได้เฉพาะภาษาอังกฤษ");
+    return false;
+  }
+  document.getElementById("err-lastname").textContent = "";
+  return true;
+}
+
+function validateTel() {
+  const tel = document.getElementById("tel").value.trim();
+  if (!tel) {
+    showError("err-tel", "กรุณากรอกเบอร์โทรศัพท์");
+    return false;
+  } else if (!/^\d+$/.test(tel)) {
+    showError("err-tel", "เบอร์โทรต้องเป็นตัวเลขเท่านั้น");
+    return false;
+  } else if (tel.length < 9 || tel.length > 10) {
+    showError("err-tel", "เบอร์โทรต้อง 9-10 หลัก");
+    return false;
+  }
+  document.getElementById("err-tel").textContent = "";
+  return true;
+}
+
+function validateMail() {
+  const mail = document.getElementById("mail").value.trim();
+
+  if (!mail) {
+    showError("err-mail", "กรุณากรอกอีเมล");
+    return false;
+  } 
+  if (mail.toLowerCase() === "admin@gmail.com") {
+    showError("err-mail", "อีเมลนี้ไม่สามารถสมัครได้");
+    return false;
+  }
+  if (!/^[A-Za-z0-9._%+-]+@gmail\.com$/.test(mail)) {
+    showError("err-mail", "สมัครได้เฉพาะ Gmail (@gmail.com)");
+    return false;
+  }
+
+  document.getElementById("err-mail").textContent = "";
+  return true;
+}
+
+function validatePassword() {
+  const password = document.getElementById("password").value;
+
+  if (password.length < 8) {
+    showError("err-password", "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร");
+    return false;
+  }
+  if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
+    showError("err-password", "ต้องมีตัวพิมพ์ใหญ่ เล็ก และตัวเลข");
+    return false;
+  }
+
+  document.getElementById("err-password").textContent = "";
+  return true;
+}
+
+function validateConfirm() {
+  const password = document.getElementById("password").value;
+  const confirm = document.getElementById("confirm").value;
+
+  if (confirm !== password) {
+    showError("err-confirm", "รหัสผ่านไม่ตรงกัน");
+    return false;
+  }
+
+  document.getElementById("err-confirm").textContent = "";
+  return true;
+}
+
+// Event listeners intact
+document.getElementById("name").addEventListener("input", validateName);
+document.getElementById("lastname").addEventListener("input", validateLastname);
+document.getElementById("tel").addEventListener("input", validateTel);
+document.getElementById("mail").addEventListener("input", validateMail);
+document.getElementById("password").addEventListener("input", () => {
+  // Logic intact, access via global or element
+  const password = document.getElementById("password"); 
+  checkPasswordStrength(password.value);
+  validatePassword();
+  validateConfirm();
+});
+document.getElementById("confirm").addEventListener("input", validateConfirm);
+</script>
+
+</body>
+</html>

@@ -5,18 +5,21 @@ const session = require("express-session");
 const mysql = require("mysql2/promise");
 const cors = require("cors");
 const nodemailer = require('nodemailer');
-
+const cron = require('node-cron');
+const otpRoutes = require('./routes/otp.routes'); 
 const app = express();
 
+/* ===== Database Configuration ===== */
 /* ===== Database Configuration ===== */
 const dbConfig = {
   host: "localhost",
   user: "root",
-  password: "", // ⬅️ เปลี่ยนรหัสผ่าน MySQL ของคุณที่นี่
+  password: "",
   database: "auth_system",
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  dateStrings: true  // ✅ เพิ่มบรรทัดนี้ครับ (สำคัญมาก)
 };
 
 const pool = mysql.createPool(dbConfig);
@@ -54,9 +57,9 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false, // เปลี่ยนเป็น true เมื่อใช้ HTTPS
+    secure: false,
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    maxAge: 24 * 60 * 60 * 1000,
     sameSite: 'strict'
   }
 }));
@@ -72,9 +75,7 @@ app.use((req, res, next) => {
 // Static Files
 app.use(express.static(path.join(__dirname, "public")));
 
-// Clean URL routing (ไม่ต้องใช้ .html)
-
-// หน้าแรก (Homepage)
+// Clean URL routing
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -103,6 +104,10 @@ app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
+app.get('/admin-calendar', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin-calendar.html'));
+});
+
 /* ===== Authentication Middleware ===== */
 const requireAuth = (req, res, next) => {
   if (!req.session.userId || req.session.userType !== 'user') {
@@ -111,12 +116,9 @@ const requireAuth = (req, res, next) => {
   next();
 };
 
-const requireAdmin = (req, res, next) => {
-  if (!req.session.adminId || req.session.userType !== 'admin') {
-    return res.status(401).json({ success: false, message: 'ไม่มีสิทธิ์เข้าถึง' });
-  }
-  next();
-};
+/* ===== Make pool and bcrypt available to routes ===== */
+app.set('pool', pool);
+app.set('bcrypt', bcrypt);
 
 /* ===== Helper Functions ===== */
 const validateEmail = (email) => {
@@ -145,7 +147,16 @@ const generateBookingId = () => {
   return `BK${Date.now()}`;
 };
 
-/* ===== SETUP ADMIN (สำหรับสร้าง Admin ครั้งแรก) ===== */
+// ✨ NEW: Helper function สำหรับคำนวณวันที่ถูกต้อง
+const calculateDays = (checkInStr, checkOutStr) => {
+  const checkInDate = new Date(checkInStr + 'T00:00:00');
+  const checkOutDate = new Date(checkOutStr + 'T00:00:00');
+  const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
+  const diffDays = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+  return diffDays + 1; // รวมทั้งวันเช็คอินและเช็คเอาท์
+};
+
+/* ===== SETUP ADMIN ===== */
 app.get("/setup-admin", async (req, res) => {
   try {
     const email = "admin@gmail.com";
@@ -161,7 +172,7 @@ app.get("/setup-admin", async (req, res) => {
           <title>Admin Already Exists</title>
           <style>
             body { font-family: Arial; padding: 50px; text-align: center; background: #f5f5f5; }
-            .container { background: white; padding: 40px; border-radius: 10px; max-width: 500px; margin: 0 auto; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+            .container { background: white; padding: 40px; border-radius: 10px; max-width: 500px; margin: 0 auto; box-shadow: 0 2 10px rgba(0,0,0,0.1); }
             h1 { color: #ff9800; }
             .info { background: #f0f0f0; padding: 20px; border-radius: 5px; margin: 20px 0; }
             a { display: inline-block; margin-top: 20px; padding: 10px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; }
@@ -175,7 +186,7 @@ app.get("/setup-admin", async (req, res) => {
               <p><strong>Email:</strong> ${email}</p>
               <p><strong>Password:</strong> Admin123</p>
             </div>
-            <a href="/login.html">Go to Login</a>
+            <a href="/login">Go to Login</a>
           </div>
         </body>
         </html>
@@ -195,7 +206,7 @@ app.get("/setup-admin", async (req, res) => {
         <title>Admin Created</title>
         <style>
           body { font-family: Arial; padding: 50px; text-align: center; background: #f5f5f5; }
-          .container { background: white; padding: 40px; border-radius: 10px; max-width: 500px; margin: 0 auto; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+          .container { background: white; padding: 40px; border-radius: 10px; max-width: 500px; margin: 0 auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
           h1 { color: #4caf50; }
           .info { background: #e8f5e9; padding: 20px; border-radius: 5px; margin: 20px 0; }
           a { display: inline-block; margin-top: 20px; padding: 10px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; }
@@ -210,7 +221,7 @@ app.get("/setup-admin", async (req, res) => {
             <p><strong>Password:</strong> ${password}</p>
           </div>
           <p style="color: #f44336; margin-top: 20px;"><strong>⚠️ โปรดเปลี่ยนรหัสผ่านหลังจาก Login ครั้งแรก</strong></p>
-          <a href="/login.html">Go to Login</a>
+          <a href="/login">Go to Login</a>
         </div>
       </body>
       </html>
@@ -224,9 +235,12 @@ app.get("/setup-admin", async (req, res) => {
   }
 });
 
+/* ===== ROUTES REGISTRATION ===== */
+app.use('/api', otpRoutes);
+
 /* ==================== AUTH APIs ==================== */
 
-// Check Session Status (สำหรับตรวจสอบว่า login แล้วหรือยัง)
+// Check Session Status
 app.get("/api/auth/check-session", (req, res) => {
   if (req.session.userId && req.session.userType === 'user') {
     res.json({ 
@@ -245,264 +259,6 @@ app.get("/api/auth/check-session", (req, res) => {
   }
 });
 
-// OTP Storage (In production, use Redis or Database)
-const otpStore = new Map(); // { email: { otp, expires, resetToken } }
-
-// Generate OTP
-const generateOTP = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-};
-
-// Generate Reset Token
-const generateResetToken = () => {
-  return require('crypto').randomBytes(32).toString('hex');
-};
-
-// Mask Email
-const maskEmail = (email) => {
-  if (!email) return '***';
-  const parts = email.split('@');
-  if (parts.length !== 2) return '***';
-  const name = parts[0];
-  const domain = parts[1];
-  if (name.length <= 2) return email;
-  return name[0] + '***' + name.slice(-1) + '@' + domain;
-};
-
-// Send OTP via Email (ใช้ Nodemailer)
-const sendOTP = async (email, otp) => {
-  try {
-    // สร้าง transporter สำหรับ Gmail
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: 'anonnut123@gmail.com',
-        pass: 'cagwpmtxdjdstucy'     // ถูก! ไม่มี space
-      }
-    });
-
-    const mailOptions = {
-      from: '"OTP" <anonnut123@gmail.com>',
-      to: email,
-      subject: '🔐 รหัส OTP สำหรับรีเซ็ตรหัสผ่าน',
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <style>
-            body {
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-              background-color: #f5f5f5;
-              margin: 0;
-              padding: 20px;
-            }
-            .container {
-              max-width: 600px;
-              margin: 0 auto;
-              background: white;
-              border-radius: 20px;
-              overflow: hidden;
-              box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            }
-            .header {
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              color: white;
-              padding: 40px 20px;
-              text-align: center;
-            }
-            .header h1 {
-              margin: 0;
-              font-size: 28px;
-            }
-            .content {
-              padding: 40px 30px;
-              text-align: center;
-            }
-            .otp-box {
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              color: white;
-              font-size: 48px;
-              font-weight: bold;
-              padding: 20px;
-              border-radius: 15px;
-              letter-spacing: 10px;
-              margin: 30px 0;
-              display: inline-block;
-            }
-            .message {
-              color: #666;
-              font-size: 16px;
-              line-height: 1.6;
-              margin: 20px 0;
-            }
-            .warning {
-              background: #fff3cd;
-              border: 2px solid #ffc107;
-              border-radius: 10px;
-              padding: 15px;
-              margin: 20px 0;
-              color: #856404;
-            }
-            .footer {
-              background: #f8f9fa;
-              padding: 20px;
-              text-align: center;
-              color: #666;
-              font-size: 14px;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1> รีเซ็ตรหัสผ่าน</h1>
-            </div>
-            <div class="content">
-              <h2>รหัส OTP สำหรับรีเซ็ตรหัสผ่าน</h2>
-              <p class="message">คุณได้ขอรีเซ็ตรหัสผ่าน กรุณากรอกรหัส OTP ด้านล่างนี้:</p>
-              <div class="otp-box">${otp}</div>
-              <div class="warning">
-                <strong>⚠️ คำเตือน:</strong> รหัส OTP นี้จะหมดอายุภายใน <strong>5 นาที</strong><br>
-                หากคุณไม่ได้ร้องขอการรีเซ็ตรหัสผ่าน กรุณาเพิกเฉยอีเมลนี้
-              </div>
-              <p class="message" style="color: #999; font-size: 14px;">
-                อีเมลนี้ถูกส่งอัตโนมัติ กรุณาอย่าตอบกลับ
-              </p>
-            </div>
-            <div class="footer">
-              © 2024 Hotel Booking System. All rights reserved.
-            </div>
-          </div>
-        </body>
-        </html>
-      `
-    };
-
-    await transporter.sendMail(mailOptions);
-    console.log(`📧 ✅ OTP email sent successfully to ${email}`);
-    return true;
-  } catch (error) {
-    console.error('❌ Send email error:', error.message);
-    console.error('Error details:', error);
-    // แสดง OTP ใน console เป็น backup
-    console.log(`📱 BACKUP - OTP for ${email}: ${otp}`);
-    return false;
-  }
-};
-
-// Forgot Password - Send OTP
-app.post("/api/forgot-password", async (req, res) => {
-  try {
-    const { email } = req.body;
-
-    if (!email) {
-      return res.json({ success: false, message: "กรุณากรอกอีเมล" });
-    }
-
-    const cleanMail = sanitizeInput(email);
-    const [users] = await pool.query("SELECT mail FROM users WHERE mail=?", [cleanMail]);
-    
-    if (users.length === 0) {
-      return res.json({ success: false, message: "ไม่พบอีเมลนี้ในระบบ" });
-    }
-
-    const otp = generateOTP();
-    const resetToken = generateResetToken();
-    const expires = Date.now() + 5 * 60 * 1000; // 5 minutes
-
-    otpStore.set(cleanMail, { otp, resetToken, expires });
-    
-    const emailSent = await sendOTP(cleanMail, otp);
-
-    console.log(`✅ OTP generated for ${cleanMail}: ${otp}`);
-    
-    res.json({ 
-      success: true, 
-      message: emailSent 
-        ? "ส่ง OTP ไปยังอีเมลของคุณแล้ว" 
-        : "ส่งอีเมลไม่สำเร็จ กรุณาดู OTP ใน console",
-      maskedEmail: maskEmail(cleanMail),
-      emailSent: emailSent
-      // ⚠️ ในระบบจริงไม่ควรส่ง OTP กลับไปให้ client
-      // แต่สำหรับ development สามารถเพิ่มได้ถ้าต้องการ test
-    });
-  } catch (error) {
-    console.error("Forgot password error:", error);
-    res.json({ success: false, message: "เกิดข้อผิดพลาด" });
-  }
-});
-
-// Verify OTP
-app.post("/api/verify-otp", async (req, res) => {
-  try {
-    const { email, otp } = req.body;
-
-    if (!email || !otp) {
-      return res.json({ success: false, message: "กรุณากรอกข้อมูลให้ครบ" });
-    }
-
-    const cleanMail = sanitizeInput(email);
-    const storedData = otpStore.get(cleanMail);
-
-    if (!storedData) {
-      return res.json({ success: false, message: "ไม่พบรหัส OTP หรือหมดอายุแล้ว" });
-    }
-
-    if (Date.now() > storedData.expires) {
-      otpStore.delete(cleanMail);
-      return res.json({ success: false, message: "รหัส OTP หมดอายุแล้ว กรุณาขอรหัสใหม่" });
-    }
-
-    if (otp !== storedData.otp) {
-      return res.json({ success: false, message: "รหัส OTP ไม่ถูกต้อง" });
-    }
-
-    console.log(`✅ OTP verified for ${cleanMail}`);
-    res.json({ success: true, message: "ยืนยัน OTP สำเร็จ", resetToken: storedData.resetToken });
-  } catch (error) {
-    console.error("Verify OTP error:", error);
-    res.json({ success: false, message: "เกิดข้อผิดพลาด" });
-  }
-});
-
-// Reset Password
-app.post("/api/reset-password", async (req, res) => {
-  try {
-    const { email, resetToken, newPassword } = req.body;
-
-    if (!email || !resetToken || !newPassword) {
-      return res.json({ success: false, message: "กรุณากรอกข้อมูลให้ครบ" });
-    }
-
-    const cleanMail = sanitizeInput(email);
-    const storedData = otpStore.get(cleanMail);
-
-    if (!storedData || storedData.resetToken !== resetToken) {
-      return res.json({ success: false, message: "ไม่สามารถรีเซ็ตรหัสผ่านได้" });
-    }
-
-    if (Date.now() > storedData.expires) {
-      otpStore.delete(cleanMail);
-      return res.json({ success: false, message: "หมดเวลาในการรีเซ็ตรหัสผ่าน" });
-    }
-
-    if (!validatePassword(newPassword)) {
-      return res.json({ success: false, message: "รหัสผ่านต้องมีอย่างน้อย 8 ตัว ประกอบด้วยตัวพิมพ์ใหญ่ เล็ก และตัวเลข" });
-    }
-
-    const hash = await bcrypt.hash(newPassword, 12);
-    await pool.query("UPDATE users SET password=?, updated_at=NOW() WHERE mail=?", [hash, cleanMail]);
-    otpStore.delete(cleanMail);
-
-    console.log(`✅ Password reset successful for ${cleanMail}`);
-    res.json({ success: true, message: "รีเซ็ตรหัสผ่านสำเร็จ" });
-  } catch (error) {
-    console.error("Reset password error:", error);
-    res.json({ success: false, message: "เกิดข้อผิดพลาด" });
-  }
-});
-
-
 // User Register
 app.post("/register", async (req, res) => {
   try {
@@ -513,7 +269,6 @@ app.post("/register", async (req, res) => {
     const cleanTel = sanitizeInput(tel);
     const cleanMail = sanitizeInput(mail);
 
-    // Validation
     if (!cleanName || !cleanLastname || !cleanTel || !cleanMail || !password || !confirm_password) {
       return res.json({ success: false, message: "กรุณากรอกข้อมูลให้ครบ" });
     }
@@ -554,7 +309,6 @@ app.post("/register", async (req, res) => {
       return res.json({ success: false, field: "confirm", message: "รหัสผ่านไม่ตรงกัน" });
     }
 
-    // Check duplicates
     const [nameRows] = await pool.query(
       "SELECT User_ID FROM users WHERE Name=? AND LastName=?", 
       [cleanName, cleanLastname]
@@ -586,7 +340,6 @@ app.post("/register", async (req, res) => {
       });
     }
 
-    // Create user
     const hash = await bcrypt.hash(password, 12);
     const user_id = generateUserId();
 
@@ -686,29 +439,6 @@ app.post("/logout", (req, res) => {
   });
 });
 
-// Check Session
-app.get("/check-session", (req, res) => {
-  if (req.session.userId) {
-    res.json({ 
-      authenticated: true,
-      userType: 'user',
-      isAdmin: false,
-      name: req.session.name,
-      userId: req.session.userId
-    });
-  } else if (req.session.adminId) {
-    res.json({ 
-      authenticated: true,
-      userType: 'admin',
-      isAdmin: true,
-      email: req.session.email,
-      adminId: req.session.adminId
-    });
-  } else {
-    res.json({ authenticated: false });
-  }
-});
-
 /* ==================== USER APIs ==================== */
 
 // Get User Profile
@@ -786,20 +516,35 @@ app.post("/change-password", requireAuth, async (req, res) => {
   }
 });
 
-// Get All Available Rooms
+// Get All Rooms
 app.get("/api/rooms", async (req, res) => {
   try {
     const [rooms] = await pool.query(
-      'SELECT * FROM rooms WHERE Status = "ว่าง" ORDER BY Room_No'
+      'SELECT * FROM rooms WHERE Status != "ปิดปรับปรุง" ORDER BY Room_No'
     );
+    
+    console.log(`📋 Fetched ${rooms.length} available rooms (excluding closed rooms)`);
     res.json({ success: true, rooms });
   } catch (error) {
-    console.error("Get rooms error:", error);
-    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด" });
+    console.error("❌ Get rooms error:", error);
+    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด: " + error.message });
   }
 });
 
-// Create Booking
+// Get All Bookings (Public)
+app.get("/api/bookings/all", async (req, res) => {
+  try {
+    const [bookings] = await pool.query(
+      'SELECT Book_ID, Room_No, Check_in, Check_out, Status FROM bookings WHERE Status IN ("รออนุมัติ", "อนุมัติแล้ว") ORDER BY Check_in'
+    );
+    res.json({ success: true, bookings });
+  } catch (error) {
+    console.error("❌ Get bookings error:", error);
+    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด: " + error.message });
+  }
+});
+
+// Create Booking - ✨ แก้ไขการคำนวณวัน
 app.post("/api/bookings", requireAuth, async (req, res) => {
   const { roomNo, checkIn, checkOut } = req.body;
 
@@ -812,69 +557,71 @@ app.post("/api/bookings", requireAuth, async (req, res) => {
   try {
     await connection.beginTransaction();
 
-    // ตรวจสอบห้องว่าง
-    const [rooms] = await connection.query(
-      'SELECT * FROM rooms WHERE Room_No = ? AND Status = "ว่าง"',
-      [roomNo]
-    );
+    const [rooms] = await connection.query('SELECT * FROM rooms WHERE Room_No = ?', [roomNo]);
 
     if (rooms.length === 0) {
       await connection.rollback();
-      return res.status(400).json({ success: false, message: "ห้องนี้ไม่ว่างหรือไม่มีในระบบ" });
+      return res.status(400).json({ success: false, message: "ไม่พบห้องนี้ในระบบ" });
     }
 
     const room = rooms[0];
 
-    // คำนวณจำนวนวัน
-    const checkInDate = new Date(checkIn);
-    const checkOutDate = new Date(checkOut);
-    const days = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+    if (room.Status === 'ปิดปรับปรุง') {
+      await connection.rollback();
+      return res.status(400).json({ 
+        success: false, 
+        message: "ห้องนี้ปิดปรับปรุงชั่วคราว ไม่สามารถจองได้" 
+      });
+    }
+
+    const [conflictBookings] = await connection.query(
+      `SELECT * FROM bookings 
+       WHERE Room_No = ? 
+       AND Status IN ('รออนุมัติ', 'อนุมัติแล้ว')
+       AND NOT (Check_out <= ? OR Check_in >= ?)`,
+      [roomNo, checkIn, checkOut]
+    );
+
+    if (conflictBookings.length > 0) {
+      await connection.rollback();
+      return res.status(400).json({ 
+        success: false, 
+        message: "ห้องนี้ถูกจองในช่วงวันที่ที่เลือกแล้ว กรุณาเลือกวันอื่น" 
+      });
+    }
+
+    // ✨ ใช้ฟังก์ชัน calculateDays แทน
+    const days = calculateDays(checkIn, checkOut);
 
     if (days < 1) {
       await connection.rollback();
       return res.status(400).json({ success: false, message: "วันเช็คเอาท์ต้องหลังจากวันเช็คอิน" });
     }
 
-    // คำนวณราคารวม
     const total = room.Rate * days;
     const bookId = generateBookingId();
     const dateBook = new Date().toISOString().split('T')[0];
 
-    // สร้างการจอง
     await connection.query(
       `INSERT INTO bookings (Book_ID, User_ID, DateBook, Check_in, Check_out, TypeRoom, Room_No, Day, Total, Status) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'รออนุมัติ')`,
       [bookId, req.session.userId, dateBook, checkIn, checkOut, room.Type, roomNo, days, total]
     );
 
-    // อัพเดทสถานะห้อง
-    await connection.query(
-      'UPDATE rooms SET Status = "จองแล้ว" WHERE Room_No = ?',
-      [roomNo]
-    );
-
     await connection.commit();
 
-    console.log(`✅ New booking created: ${bookId} by user ${req.session.userId}`);
+    console.log(`✅ Booking created successfully: ${bookId} (${days} วัน)`);
 
     res.json({
       success: true,
       message: "จองห้องสำเร็จ! รอการอนุมัติจากแอดมิน",
-      booking: {
-        bookId,
-        roomNo,
-        checkIn,
-        checkOut,
-        days,
-        total,
-        roomType: room.Type
-      }
+      booking: { bookId, roomNo, checkIn, checkOut, days, total, roomType: room.Type }
     });
 
   } catch (error) {
     await connection.rollback();
-    console.error("Create booking error:", error);
-    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาดในการจอง" });
+    console.error("❌ Create booking error:", error);
+    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาดในการจอง: " + error.message });
   } finally {
     connection.release();
   }
@@ -889,12 +636,12 @@ app.get("/api/my-bookings", requireAuth, async (req, res) => {
     );
     res.json({ success: true, bookings });
   } catch (error) {
-    console.error("Get bookings error:", error);
+    console.error("❌ Get bookings error:", error);
     res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด" });
   }
 });
 
-// Cancel Booking (User)
+// Cancel Booking (DELETE method)
 app.delete("/api/bookings/:bookId", requireAuth, async (req, res) => {
   const { bookId } = req.params;
   const connection = await pool.getConnection();
@@ -912,17 +659,7 @@ app.delete("/api/bookings/:bookId", requireAuth, async (req, res) => {
       return res.status(400).json({ success: false, message: "ไม่สามารถยกเลิกการจองนี้ได้" });
     }
 
-    const booking = bookings[0];
-
-    await connection.query(
-      'UPDATE bookings SET Status = "ยกเลิก" WHERE Book_ID = ?',
-      [bookId]
-    );
-
-    await connection.query(
-      'UPDATE rooms SET Status = "ว่าง" WHERE Room_No = ?',
-      [booking.Room_No]
-    );
+    await connection.query('UPDATE bookings SET Status = "ยกเลิก" WHERE Book_ID = ?', [bookId]);
 
     await connection.commit();
     console.log(`✅ Booking cancelled: ${bookId}`);
@@ -937,112 +674,8 @@ app.delete("/api/bookings/:bookId", requireAuth, async (req, res) => {
   }
 });
 
-/* ==================== ADMIN APIs ==================== */
-
-// Get Admin Profile
-app.get("/api/admin/profile", requireAdmin, async (req, res) => {
-  try {
-    const [admins] = await pool.query(
-      'SELECT admin_id, email, created_at, last_login FROM admin WHERE admin_id = ?',
-      [req.session.adminId]
-    );
-    
-    if (admins.length === 0) {
-      return res.status(404).json({ success: false, message: "ไม่พบข้อมูลแอดมิน" });
-    }
-
-    res.json({ success: true, admin: admins[0] });
-  } catch (error) {
-    console.error("Get admin profile error:", error);
-    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด" });
-  }
-});
-
-// Get All Users (Admin)
-app.get("/admin/users", requireAdmin, async (req, res) => {
-  try {
-    const [rows] = await pool.query(
-      "SELECT User_ID, Name, LastName, Tel, mail, created_at, last_login FROM users ORDER BY created_at DESC"
-    );
-    res.json({ success: true, users: rows });
-  } catch (error) {
-    console.error("Get users error:", error);
-    res.json({ success: false, message: "ดึงข้อมูลไม่สำเร็จ" });
-  }
-});
-
-// Delete User (Admin)
-app.delete("/admin/users/:id", requireAdmin, async (req, res) => {
-  const userId = req.params.id;
-
-  try {
-    // ตรวจสอบการจองค้างอยู่
-    const [bookings] = await pool.query(
-      'SELECT COUNT(*) as count FROM bookings WHERE User_ID = ? AND Status IN ("รออนุมัติ", "อนุมัติแล้ว")',
-      [userId]
-    );
-
-    if (bookings[0].count > 0) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "ไม่สามารถลบผู้ใช้ที่มีการจองค้างอยู่ได้" 
-      });
-    }
-
-    const [result] = await pool.query("DELETE FROM users WHERE User_ID=?", [userId]);
-    
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ success: false, message: "ไม่พบผู้ใช้นี้" });
-    }
-
-    console.log(`✅ User deleted: ${userId}`);
-    res.json({ success: true, message: "ลบผู้ใช้สำเร็จ" });
-  } catch (error) {
-    console.error("Delete user error:", error);
-    res.json({ success: false, message: "ลบผู้ใช้ไม่สำเร็จ" });
-  }
-});
-
-// Get All Bookings (Admin)
-app.get("/api/admin/bookings", requireAdmin, async (req, res) => {
-  try {
-    const [bookings] = await pool.query(`
-      SELECT b.*, u.Name, u.LastName, u.Tel, u.mail 
-      FROM bookings b 
-      LEFT JOIN users u ON b.User_ID = u.User_ID 
-      ORDER BY b.created_at DESC
-    `);
-    res.json({ success: true, bookings });
-  } catch (error) {
-    console.error("Get all bookings error:", error);
-    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด" });
-  }
-});
-
-// Approve Booking (Admin)
-app.put("/api/admin/bookings/:bookId/approve", requireAdmin, async (req, res) => {
-  const { bookId } = req.params;
-
-  try {
-    const [result] = await pool.query(
-      'UPDATE bookings SET Status = "อนุมัติแล้ว" WHERE Book_ID = ? AND Status = "รออนุมัติ"',
-      [bookId]
-    );
-
-    if (result.affectedRows === 0) {
-      return res.status(400).json({ success: false, message: "ไม่สามารถอนุมัติการจองนี้ได้" });
-    }
-
-    console.log(`✅ Booking approved: ${bookId}`);
-    res.json({ success: true, message: "อนุมัติการจองสำเร็จ" });
-  } catch (error) {
-    console.error("Approve booking error:", error);
-    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด" });
-  }
-});
-
-// Reject Booking (Admin)
-app.put("/api/admin/bookings/:bookId/reject", requireAdmin, async (req, res) => {
+// Cancel Booking (POST method)
+app.post("/api/bookings/:bookId/cancel", requireAuth, async (req, res) => {
   const { bookId } = req.params;
   const connection = await pool.getConnection();
 
@@ -1050,205 +683,107 @@ app.put("/api/admin/bookings/:bookId/reject", requireAdmin, async (req, res) => 
     await connection.beginTransaction();
 
     const [bookings] = await connection.query(
-      'SELECT * FROM bookings WHERE Book_ID = ? AND Status = "รออนุมัติ"',
-      [bookId]
+      'SELECT * FROM bookings WHERE Book_ID = ? AND User_ID = ? AND Status = "รออนุมัติ"',
+      [bookId, req.session.userId]
     );
 
     if (bookings.length === 0) {
       await connection.rollback();
-      return res.status(400).json({ success: false, message: "ไม่สามารถยกเลิกการจองนี้ได้" });
+      return res.status(400).json({ 
+        success: false, 
+        message: "ไม่สามารถยกเลิกการจองนี้ได้ (ยกเลิกได้เฉพาะสถานะ 'รออนุมัติ')" 
+      });
     }
 
-    const booking = bookings[0];
-
-    await connection.query(
-      'UPDATE bookings SET Status = "ยกเลิก" WHERE Book_ID = ?',
-      [bookId]
-    );
-
-    await connection.query(
-      'UPDATE rooms SET Status = "ว่าง" WHERE Room_No = ?',
-      [booking.Room_No]
-    );
+    await connection.query('UPDATE bookings SET Status = "ยกเลิก" WHERE Book_ID = ?', [bookId]);
 
     await connection.commit();
-    console.log(`✅ Booking rejected: ${bookId}`);
+    console.log(`✅ Booking cancelled: ${bookId} by User: ${req.session.userId}`);
     res.json({ success: true, message: "ยกเลิกการจองสำเร็จ" });
 
   } catch (error) {
     await connection.rollback();
-    console.error("Reject booking error:", error);
-    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด" });
+    console.error("Cancel booking error:", error);
+    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด: " + error.message });
   } finally {
     connection.release();
   }
 });
 
-// Get All Rooms (Admin)
-app.get("/api/admin/rooms", requireAdmin, async (req, res) => {
+/* ==================== ADMIN ROUTES ==================== */
+const adminRoutes = require('./routes/admin.routes')(pool);
+app.use('/api/admin', adminRoutes);
+
+/* ===== AUTO CHECK-OUT SYSTEM ===== */
+cron.schedule('0 12 * * *', async () => {
   try {
-    const [rooms] = await pool.query('SELECT * FROM rooms ORDER BY Room_No');
-    res.json({ success: true, rooms });
-  } catch (error) {
-    console.error("Get rooms error:", error);
-    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด" });
-  }
-});
-
-// Add New Room (Admin)
-// Add New Room (Admin)
-app.post("/api/admin/rooms", requireAdmin, async (req, res) => {
-  const { roomNo, rate, type, maxGuests, description, image1, image2, image3, image4 } = req.body;
-
-  if (!roomNo || !rate || !type) {
-    return res.status(400).json({ success: false, message: "กรุณากรอกข้อมูลให้ครบถ้วน" });
-  }
-
-  try {
-    const [existing] = await pool.query('SELECT * FROM rooms WHERE Room_No = ?', [roomNo]);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayStr = today.toISOString().split('T')[0];
     
-    if (existing.length > 0) {
-      return res.status(400).json({ success: false, message: "หมายเลขห้องนี้มีในระบบแล้ว" });
+    console.log(`🔄 [${new Date().toLocaleString('th-TH')}] Running auto check-out...`);
+    
+    const [expiredBookings] = await pool.query(`
+      SELECT DISTINCT Room_No, Book_ID
+      FROM bookings 
+      WHERE Check_out = ? 
+      AND Status = 'อนุมัติแล้ว'
+    `, [todayStr]);
+    
+    if (expiredBookings.length > 0) {
+      const roomNumbers = expiredBookings.map(b => b.Room_No);
+      
+      const [updateResult] = await pool.query(`
+        UPDATE rooms 
+        SET Status = 'ว่าง' 
+        WHERE Room_No IN (?) 
+        AND Status = 'จอง'
+      `, [roomNumbers]);
+      
+      console.log(`✅ Auto check-out completed:`);
+      console.log(`   - Rooms affected: ${roomNumbers.join(', ')}`);
+      console.log(`   - Updated ${updateResult.affectedRows} room(s)`);
+    } else {
+      console.log(`ℹ️  No check-outs scheduled for ${todayStr}`);
     }
-
-    await pool.query(
-      'INSERT INTO rooms (Room_No, Rate, Type, Max_Guests, Description, Image1, Image2, Image3, Image4, Status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, "ว่าง")',
-      [roomNo, rate, type, maxGuests || 2, description || '', image1 || '', image2 || '', image3 || '', image4 || '']
-    );
-
-    console.log(`✅ New room added: ${roomNo}`);
-    res.json({ success: true, message: "เพิ่มห้องพักสำเร็จ" });
   } catch (error) {
-    console.error("Add room error:", error);
-    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด" });
+    console.error('❌ Auto check-out error:', error);
   }
 });
 
-// Update Room (Admin)
-app.put("/api/admin/rooms/:roomNo", requireAdmin, async (req, res) => {
-  const { roomNo } = req.params;
-  const { rate, type, maxGuests, description, image1, image2, image3, image4, status } = req.body;
-
+// Room Status Sync
+cron.schedule('0 * * * *', async () => {
   try {
-    const [result] = await pool.query(
-      'UPDATE rooms SET Rate = ?, Type = ?, Max_Guests = ?, Description = ?, Image1 = ?, Image2 = ?, Image3 = ?, Image4 = ?, Status = ? WHERE Room_No = ?',
-      [rate, type, maxGuests || 2, description || '', image1 || '', image2 || '', image3 || '', image4 || '', status, roomNo]
-    );
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ success: false, message: "ไม่พบห้องพักนี้" });
-    }
-
-    console.log(`✅ Room updated: ${roomNo}`);
-    res.json({ success: true, message: "อัพเดทข้อมูลห้องพักสำเร็จ" });
-  } catch (error) {
-    console.error("Update room error:", error);
-    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด" });
-  }
-});
-
-// Delete Room (Admin)
-app.delete("/api/admin/rooms/:roomNo", requireAdmin, async (req, res) => {
-  const { roomNo } = req.params;
-
-  try {
-    const [bookings] = await pool.query(
-      'SELECT COUNT(*) as count FROM bookings WHERE Room_No = ? AND Status IN ("รออนุมัติ", "อนุมัติแล้ว")',
-      [roomNo]
-    );
-
-    if (bookings[0].count > 0) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "ไม่สามารถลบห้องที่มีการจองค้างอยู่ได้" 
-      });
-    }
-
-    const [result] = await pool.query('DELETE FROM rooms WHERE Room_No = ?', [roomNo]);
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ success: false, message: "ไม่พบห้องพักนี้" });
-    }
-
-    console.log(`✅ Room deleted: ${roomNo}`);
-    res.json({ success: true, message: "ลบห้องพักสำเร็จ" });
-  } catch (error) {
-    console.error("Delete room error:", error);
-    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด" });
-  }
-});
-
-// Get Dashboard Statistics (Admin)
-app.get("/api/admin/stats", requireAdmin, async (req, res) => {
-  try {
-    const [totalRooms] = await pool.query('SELECT COUNT(*) as count FROM rooms');
-    const [availableRooms] = await pool.query('SELECT COUNT(*) as count FROM rooms WHERE Status = "ว่าง"');
-    const [totalUsers] = await pool.query('SELECT COUNT(*) as count FROM users');
-    const [pendingBookings] = await pool.query('SELECT COUNT(*) as count FROM bookings WHERE Status = "รออนุมัติ"');
-    const [approvedBookings] = await pool.query('SELECT COUNT(*) as count FROM bookings WHERE Status = "อนุมัติแล้ว"');
-    const [totalRevenue] = await pool.query('SELECT SUM(Total) as total FROM bookings WHERE Status = "อนุมัติแล้ว"');
-
-    res.json({
-      success: true,
-      stats: {
-        totalRooms: totalRooms[0].count,
-        availableRooms: availableRooms[0].count,
-        bookedRooms: totalRooms[0].count - availableRooms[0].count,
-        totalUsers: totalUsers[0].count,
-        pendingBookings: pendingBookings[0].count,
-        approvedBookings: approvedBookings[0].count,
-        totalRevenue: totalRevenue[0].total || 0
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    
+    const [rooms] = await pool.query('SELECT Room_No, Status FROM rooms');
+    
+    for (const room of rooms) {
+      if (room.Status === 'ปิดปรับปรุง') {
+        continue;
       }
-    });
-  } catch (error) {
-    console.error("Get stats error:", error);
-    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด" });
-  }
-});
-
-
-// Get All Users (Admin)
-app.get("/api/admin/users", requireAdmin, async (req, res) => {
-  try {
-    const [users] = await pool.query(
-      'SELECT User_ID, Name, LastName, Tel, mail, created_at, last_login FROM users ORDER BY created_at DESC'
-    );
-    res.json({ success: true, users });
-  } catch (error) {
-    console.error("Get users error:", error);
-    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด" });
-  }
-});
-
-// Delete User (Admin)
-app.delete("/api/admin/users/:userId", requireAdmin, async (req, res) => {
-  const { userId } = req.params;
-
-  try {
-    const [bookings] = await pool.query(
-      'SELECT COUNT(*) as count FROM bookings WHERE User_ID = ? AND Status IN ("รออนุมัติ", "อนุมัติแล้ว")',
-      [userId]
-    );
-
-    if (bookings[0].count > 0) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "ไม่สามารถลบผู้ใช้ที่มีการจองค้างอยู่ได้" 
-      });
+      
+      const [currentBookings] = await pool.query(`
+        SELECT * FROM bookings 
+        WHERE Room_No = ? 
+        AND Status = 'อนุมัติแล้ว'
+        AND Check_in <= ?
+        AND Check_out > ?
+      `, [room.Room_No, todayStr, todayStr]);
+      
+      if (currentBookings.length > 0) {
+        if (room.Status !== 'จอง') {
+          await pool.query(`UPDATE rooms SET Status = 'จอง' WHERE Room_No = ?`, [room.Room_No]);
+        }
+      } else {
+        if (room.Status === 'จอง') {
+          await pool.query(`UPDATE rooms SET Status = 'ว่าง' WHERE Room_No = ?`, [room.Room_No]);
+        }
+      }
     }
-
-    await pool.query('DELETE FROM bookings WHERE User_ID = ?', [userId]);
-    const [result] = await pool.query('DELETE FROM users WHERE User_ID = ?', [userId]);
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ success: false, message: "ไม่พบผู้ใช้นี้" });
-    }
-
-    console.log(`✅ User deleted: ${userId}`);
-    res.json({ success: true, message: "ลบผู้ใช้สำเร็จ" });
   } catch (error) {
-    console.error("Delete user error:", error);
-    res.status(500).json({ success: false, message: "เกิดข้อผิดพลาด" });
+    console.error('❌ Room status check error:', error);
   }
 });
 
@@ -1302,7 +837,7 @@ app.use((req, res) => {
       <div class="container">
         <h1>404</h1>
         <p>ไม่พบหน้าที่คุณต้องการ</p>
-        <a href="/login.html">กลับสู่หน้า Login</a>
+        <a href="/login">กลับสู่หน้า Login</a>
       </div>
     </body>
     </html>
@@ -1318,20 +853,23 @@ app.use((err, req, res, next) => {
 /* ===== START SERVER ===== */
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log("\n" + "=".repeat(60));
+  console.log("\n" + "=".repeat(70));
   console.log("🚀 Server running on http://localhost:" + PORT);
-  console.log("=".repeat(60));
+  console.log("=".repeat(70));
   console.log("📝 Pages:");
-  console.log("   - Login:       http://localhost:" + PORT + "/login.html");
-  console.log("   - Register:    http://localhost:" + PORT + "/register.html");
-  console.log("   - Setup Admin: http://localhost:" + PORT + "/setup-admin");
-  console.log("=".repeat(60));
-  console.log("📦 Database: auth_system");
-  console.log("📧 Email: anonnat@gmail.com (Gmail OTP enabled)");
-  console.log("=".repeat(60));
-  console.log("\n💡 First time setup:");
-  console.log("   1. สร้าง database: CREATE DATABASE auth_system;");
-  console.log("   2. Import ไฟล์ SQL structure");
-  console.log("   3. Visit: http://localhost:" + PORT + "/setup-admin");
-  console.log("=".repeat(60) + "\n");
+  console.log("   - Login:          http://localhost:" + PORT + "/login");
+  console.log("   - Register:       http://localhost:" + PORT + "/register");
+  console.log("   - Forgot Password: http://localhost:" + PORT + "/forgot-password");
+  console.log("   - User Dashboard: http://localhost:" + PORT + "/user");
+  console.log("   - Admin:          http://localhost:" + PORT + "/admin");
+  console.log("   - Admin Calendar: http://localhost:" + PORT + "/admin-calendar");
+  console.log("   - Setup Admin:    http://localhost:" + PORT + "/setup-admin");
+  console.log("=".repeat(70));
+  console.log("✨ Enhanced Features:");
+  console.log("   ✓ OTP Email System (Forgot Password)");
+  console.log("   ✓ FIXED: Date calculation (+1 for inclusive dates)");
+  console.log("   ✓ Room Closure System (Status-based)");
+  console.log("   ✓ Auto Check-out (Daily 12:00 PM)");
+  console.log("   ✓ Hourly Status Sync");
+  console.log("=".repeat(70) + "\n");
 });

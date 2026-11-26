@@ -3,21 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Hotel Admin Dashboard</title>
-    <!-- Tailwind CSS -->
+    <title>CPE Hotel | แดชบอร์ดผู้ดูแลระบบ</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Sarabun', 'sans-serif'] },
+                    fontFamily: { sans: ['Prompt', 'sans-serif'] },
                     colors: {
-                        brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 900: '#0c4a6e' }
+                        primary: '#6366f1',
+                        'primary-dark': '#4f46e5',
+                        secondary: '#ec4899',
+                        accent: '#8b5cf6',
+                        surface: '#ffffff',
+                        'bg-body': '#f3f4f6'
                     }
                 }
             }
@@ -25,255 +28,262 @@
     </script>
 
     <style>
-        body { background-color: #f8fafc; }
-        
-        /* Glassmorphism Classes */
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.05);
+        body { 
+            background-color: #f3f4f6;
+            background-image: radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%), 
+                              radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.15) 0px, transparent 50%);
+            background-attachment: fixed;
         }
         
-        .glass-sidebar {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(16px);
-            border-left: 1px solid rgba(255, 255, 255, 0.3);
+        .glass-panel { 
+            background: rgba(255, 255, 255, 0.85); 
+            backdrop-filter: blur(12px); 
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+        
+        .glass-sidebar { 
+            background: rgba(255, 255, 255, 0.95); 
+            backdrop-filter: blur(16px); 
+            border-left: 1px solid rgba(255, 255, 255, 0.3); 
         }
 
-        /* Animations */
-        .fade-in { animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-hover { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-hover:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
     </style>
 </head>
-<body class="text-slate-600 min-h-screen relative overflow-x-hidden selection:bg-brand-500 selection:text-white">
+<body class="text-slate-600 min-h-screen relative overflow-x-hidden selection:bg-primary selection:text-white">
 
-    <!-- TOAST NOTIFICATION CONTAINER -->
-    <div id="toast-container" class="fixed top-5 right-5 z-[150] flex flex-col gap-3 w-full max-w-sm pointer-events-none"></div>
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-24 right-5 z-[150] flex flex-col gap-3 w-full max-w-sm pointer-events-none"></div>
 
-    <!-- NAVBAR -->
-    <nav class="glass-panel sticky top-0 z-40 border-b border-slate-200/60">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Navbar -->
+    <nav class="glass-panel sticky top-0 z-40 border-b border-white/50 shadow-sm">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-20 items-center">
-                <!-- Logo -->
-                <div class="flex items-center gap-4 group cursor-pointer" onclick="window.location.reload()">
-                    <div class="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white text-xl shadow-lg shadow-indigo-200 group-hover:scale-105 transition-transform duration-300">
-                        <i class="fa-solid fa-crown"></i>
-                        <div class="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
+                <div class="flex items-center gap-3 cursor-pointer group" onclick="window.location.reload()">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white shadow-lg shadow-indigo-200 group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-layer-group"></i>
                     </div>
-                    <div>
-                        <h1 class="text-2xl font-bold text-slate-800 tracking-tight leading-none">HOTEL <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">ADMIN</span></h1>
-                        <p class="text-xs text-slate-400 font-medium tracking-wide mt-1">PRO DASHBOARD v2.1</p>
-                    </div>
+                    <span class="text-2xl font-bold gradient-text tracking-tight">CPE Hotel</span>
                 </div>
 
-                <!-- Right Actions -->
-                <div class="flex items-center gap-4">
-                    <div class="hidden md:flex flex-col text-right">
-                        <span class="text-sm font-bold text-slate-700" id="navAdminName">Admin</span>
-                        <span class="text-[10px] uppercase tracking-wider text-green-500 font-bold bg-green-50 px-2 py-0.5 rounded-full inline-block ml-auto">Online</span>
+                <div class="flex items-center gap-6">
+                    <a href="/admin-calendar" class="hidden md:flex items-center gap-2 px-4 py-2 rounded-full text-slate-500 hover:text-primary hover:bg-indigo-50 transition font-medium text-sm">
+                        <i class="fa-solid fa-calendar-days"></i>
+                        <span>ปฏิทิน</span>
+                    </a>
+                    
+                    <div class="flex items-center gap-3 pl-6 border-l border-slate-200">
+                        <div class="hidden md:flex flex-col text-right">
+                            <span class="text-sm font-bold text-slate-700" id="navAdminName">ผู้ดูแลระบบ</span>
+                            <span class="text-[10px] uppercase tracking-wider text-green-600 bg-green-100 px-2 py-0.5 rounded-full inline-block ml-auto">ออนไลน์</span>
+                        </div>
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent p-[2px] shadow-lg shadow-indigo-200">
+                            <div class="w-full h-full rounded-full bg-white flex items-center justify-center text-primary font-bold">
+                                A
+                            </div>
+                        </div>
+                        <button onclick="toggleSidebar()" class="ml-2 w-10 h-10 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-500 transition-all">
+                            <i class="fa-solid fa-bars-staggered text-lg"></i>
+                        </button>
                     </div>
-                    <button onclick="toggleSidebar()" class="w-12 h-12 rounded-full bg-slate-100 hover:bg-white hover:shadow-md border border-transparent hover:border-slate-200 flex items-center justify-center text-slate-600 transition-all duration-300">
-                        <i class="fa-solid fa-bars-staggered text-lg"></i>
-                    </button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <!-- MAIN CONTENT -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 fade-in">
+    <!-- Main Content -->
+    <main class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-10 fade-in">
         
-        <!-- DASHBOARD STATS -->
-        <div id="statsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            <!-- Stats will load here -->
-             <div class="bg-white p-6 rounded-3xl shadow-sm animate-pulse h-40"></div>
-             <div class="bg-white p-6 rounded-3xl shadow-sm animate-pulse h-40"></div>
-             <div class="bg-white p-6 rounded-3xl shadow-sm animate-pulse h-40"></div>
-             <div class="bg-white p-6 rounded-3xl shadow-sm animate-pulse h-40"></div>
+        <div class="mb-10">
+            <h1 class="text-3xl font-bold text-slate-800 mb-2">ภาพรวมแดรชบอร์ด</h1>
+            <p class="text-slate-500 font-light">ยินดีต้อนรับกลับมา นี่คือสิ่งที่เกิดขึ้นกับโรงแรมของคุณวันนี้</p>
         </div>
 
-        <!-- CONTENT PANEL -->
-        <div class="glass-panel rounded-[2.5rem] overflow-hidden shadow-xl shadow-slate-200/60 min-h-[600px]">
+        <!-- Stats Grid -->
+        <div id="statsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+             <div class="bg-white p-6 rounded-2xl shadow-sm animate-pulse h-40"></div>
+             <div class="bg-white p-6 rounded-2xl shadow-sm animate-pulse h-40"></div>
+             <div class="bg-white p-6 rounded-2xl shadow-sm animate-pulse h-40"></div>
+             <div class="bg-white p-6 rounded-2xl shadow-sm animate-pulse h-40"></div>
+        </div>
+
+        <!-- Main Panel -->
+        <div class="bg-white rounded-[1.5rem] shadow-xl shadow-slate-200/50 min-h-[600px] border border-white/60 overflow-hidden relative">
             
-            <!-- Custom Tabs Navigation -->
-            <div class="flex border-b border-slate-100 bg-slate-50/50 backdrop-blur-sm sticky top-0 z-10">
-                <button onclick="switchTab('bookings')" id="tab-bookings" class="flex-1 py-6 text-sm font-bold text-slate-500 hover:text-indigo-600 hover:bg-white/80 transition-all relative group">
-                    <span class="flex items-center justify-center gap-3">
-                        <i class="fa-solid fa-calendar-check text-xl mb-1 block group-hover:-translate-y-1 transition-transform"></i> 
-                        <span class="text-base">รายการจอง</span>
+            <!-- Tabs -->
+            <div class="flex border-b border-slate-100 bg-slate-50/50 backdrop-blur-sm sticky top-0 z-10 px-6 pt-4 gap-2">
+                <button onclick="switchTab('bookings')" id="tab-bookings" class="px-6 py-4 text-sm font-semibold text-slate-500 hover:text-primary transition-all relative group rounded-t-xl hover:bg-white">
+                    <span class="flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-check"></i> การจอง
                     </span>
-                    <span class="absolute bottom-0 left-0 w-full h-1 bg-indigo-600 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-t-full"></span>
+                    <span class="absolute bottom-0 left-0 w-full h-[3px] bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-t-full"></span>
                 </button>
-                <button onclick="switchTab('rooms')" id="tab-rooms" class="flex-1 py-6 text-sm font-bold text-slate-500 hover:text-violet-600 hover:bg-white/80 transition-all relative group">
-                    <span class="flex items-center justify-center gap-3">
-                        <i class="fa-solid fa-door-open text-xl mb-1 block group-hover:-translate-y-1 transition-transform"></i> 
-                        <span class="text-base">จัดการห้องพัก</span>
+                <button onclick="switchTab('rooms')" id="tab-rooms" class="px-6 py-4 text-sm font-semibold text-slate-500 hover:text-secondary transition-all relative group rounded-t-xl hover:bg-white">
+                    <span class="flex items-center gap-2">
+                        <i class="fa-solid fa-bed"></i> ห้องพัก
                     </span>
-                    <span class="absolute bottom-0 left-0 w-full h-1 bg-violet-600 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-t-full"></span>
+                    <span class="absolute bottom-0 left-0 w-full h-[3px] bg-secondary scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-t-full"></span>
                 </button>
-                <button onclick="switchTab('users')" id="tab-users" class="flex-1 py-6 text-sm font-bold text-slate-500 hover:text-fuchsia-600 hover:bg-white/80 transition-all relative group">
-                    <span class="flex items-center justify-center gap-3">
-                        <i class="fa-solid fa-users text-xl mb-1 block group-hover:-translate-y-1 transition-transform"></i> 
-                        <span class="text-base">ผู้ใช้งาน</span>
+                <button onclick="switchTab('users')" id="tab-users" class="px-6 py-4 text-sm font-semibold text-slate-500 hover:text-accent transition-all relative group rounded-t-xl hover:bg-white">
+                    <span class="flex items-center gap-2">
+                        <i class="fa-solid fa-users"></i> ผู้ใช้
                     </span>
-                    <span class="absolute bottom-0 left-0 w-full h-1 bg-fuchsia-600 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-t-full"></span>
+                    <span class="absolute bottom-0 left-0 w-full h-[3px] bg-accent scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-t-full"></span>
                 </button>
             </div>
 
-            <!-- Tab Content Area -->
-            <div class="p-8 bg-white/50">
+            <div class="p-8">
                 
-                <!-- 1. Bookings Tab -->
+                <!-- Bookings Tab -->
                 <div id="content-bookings" class="tab-content">
-                    <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
                         <div>
-                            <h2 class="text-2xl font-bold text-slate-800">รายการจองทั้งหมด</h2>
-                            <p class="text-sm text-slate-500">ตรวจสอบและอนุมัติการจองห้องพัก</p>
+                            <h2 class="text-xl font-bold text-slate-800">คำขอจองห้องพัก</h2>
+                            <p class="text-sm text-slate-500 font-light">จัดการและอนุมัติการจองที่เข้ามา</p>
                         </div>
                         <div class="relative group">
-                            <i class="fa-solid fa-filter absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-hover:text-indigo-500 transition"></i>
-                            <select id="statusFilter" onchange="filterBookings()" class="pl-11 pr-10 py-3 bg-white border border-slate-200 rounded-2xl font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition shadow-sm hover:shadow-md cursor-pointer appearance-none">
-                                <option value="all">สถานะ: ทั้งหมด</option>
+                            <i class="fa-solid fa-filter absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-hover:text-primary transition"></i>
+                            <select id="statusFilter" onchange="filterBookings()" class="pl-11 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition shadow-sm hover:bg-white cursor-pointer appearance-none text-sm">
+                                <option value="all">สถานะทั้งหมด</option>
                                 <option value="รออนุมัติ">⏳ รออนุมัติ</option>
                                 <option value="อนุมัติแล้ว">✅ อนุมัติแล้ว</option>
                                 <option value="ยกเลิก">❌ ยกเลิก</option>
                             </select>
                         </div>
                     </div>
-                    <div id="bookingsTable" class="rounded-2xl border border-slate-100 overflow-hidden bg-white shadow-sm"></div>
+                    <div id="bookingsTable" class="rounded-xl border border-slate-100 overflow-hidden bg-white"></div>
                 </div>
 
-                <!-- 2. Rooms Tab -->
+                <!-- Rooms Tab -->
                 <div id="content-rooms" class="tab-content hidden">
                     <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
                         <div>
-                            <h2 class="text-2xl font-bold text-slate-800">จัดการข้อมูลห้องพัก</h2>
-                            <p class="text-sm text-slate-500">เพิ่ม ลบ หรือแก้ไขรายละเอียดห้องพัก</p>
+                            <h2 class="text-xl font-bold text-slate-800">จัดการห้องพัก</h2>
+                            <p class="text-sm text-slate-500 font-light">ควบคุมความพร้อมและรายละเอียดห้องพัก</p>
                         </div>
-                        <button onclick="showAddRoomModal()" class="group relative px-6 py-3 rounded-2xl bg-slate-900 text-white font-bold shadow-lg shadow-slate-300 hover:shadow-xl hover:-translate-y-0.5 transition-all overflow-hidden">
-                            <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-violet-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            <span class="relative flex items-center gap-2">
-                                <i class="fa-solid fa-plus bg-white/20 p-1 rounded-md text-xs"></i> เพิ่มห้องพักใหม่
-                            </span>
+                        <button onclick="showAddRoomModal()" class="px-5 py-2.5 rounded-xl bg-slate-800 text-white font-medium shadow-lg shadow-slate-300 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2 text-sm">
+                            <i class="fa-solid fa-plus"></i> เพิ่มห้องพักใหม่
                         </button>
                     </div>
-                    <div id="roomsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+                    <div id="roomsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
                 </div>
 
-                <!-- 3. Users Tab -->
+                <!-- Users Tab -->
                 <div id="content-users" class="tab-content hidden">
-                    <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
                         <div>
-                            <h2 class="text-2xl font-bold text-slate-800">รายชื่อสมาชิก</h2>
-                            <p class="text-sm text-slate-500">จัดการข้อมูลผู้ใช้งานในระบบ</p>
+                            <h2 class="text-xl font-bold text-slate-800">ผู้ใช้ที่ลงทะเบียน</h2>
+                            <p class="text-sm text-slate-500 font-light">รายชื่อลูกค้าทั้งหมดในระบบ</p>
                         </div>
-                        <div class="relative w-full sm:w-80 group">
-                            <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-hover:text-fuchsia-500 transition"></i>
-                            <input type="text" id="userSearch" onkeyup="filterUsers()" placeholder="ค้นหาชื่อ, เบอร์โทร..." class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-500 transition shadow-sm">
+                        <div class="relative w-full sm:w-72 group">
+                            <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-hover:text-accent transition"></i>
+                            <input type="text" id="userSearch" onkeyup="filterUsers()" placeholder="ค้นหาผู้ใช้..." class="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition shadow-sm text-sm">
                         </div>
                     </div>
-                    <div id="usersTable" class="rounded-2xl border border-slate-100 overflow-hidden bg-white shadow-sm"></div>
+                    <div id="usersTable" class="rounded-xl border border-slate-100 overflow-hidden bg-white"></div>
                 </div>
 
             </div>
         </div>
     </main>
 
-    <!-- RIGHT SIDEBAR -->
-    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-50 hidden opacity-0 transition-opacity duration-300"></div>
+    <!-- Sidebar -->
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-50 hidden opacity-0 transition-opacity duration-300"></div>
     <aside id="rightSidebar" class="fixed top-0 right-0 h-full w-80 glass-sidebar z-[60] transform translate-x-full transition-transform duration-300 ease-in-out shadow-2xl flex flex-col">
         <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-            <h3 class="font-bold text-slate-800">Menu</h3>
-            <button onclick="toggleSidebar()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition">
+            <h3 class="font-bold text-slate-800 text-lg">เมนู</h3>
+            <button onclick="toggleSidebar()" class="w-8 h-8 rounded-full bg-slate-50 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition">
                 <i class="fa-solid fa-times"></i>
             </button>
         </div>
         
         <div class="p-6 flex-1 overflow-y-auto">
             <div class="text-center mb-10">
-                <div class="w-24 h-24 mx-auto bg-gradient-to-tr from-indigo-500 to-fuchsia-500 rounded-3xl rotate-3 flex items-center justify-center text-white text-4xl shadow-xl shadow-indigo-200 mb-4">
-                    <i class="fa-solid fa-user-gear"></i>
+                <div class="w-20 h-20 mx-auto bg-gradient-to-tr from-primary to-secondary rounded-2xl rotate-3 flex items-center justify-center text-white text-3xl shadow-lg shadow-indigo-200 mb-4">
+                    <i class="fa-solid fa-user-shield"></i>
                 </div>
-                <h4 class="font-bold text-xl text-slate-800" id="sidebarEmail">Loading...</h4>
-                <div class="inline-flex items-center gap-1 mt-1 px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-xs font-bold border border-indigo-100">
-                    <i class="fa-solid fa-shield-halved"></i> Administrator
+                <h4 class="font-bold text-lg text-slate-800 break-all" id="sidebarEmail">กำลังโหลด...</h4>
+                <div class="inline-flex items-center gap-1 mt-2 px-3 py-1 rounded-full bg-indigo-50 text-primary text-xs font-bold border border-indigo-100">
+                    <i class="fa-solid fa-circle-check"></i> ผู้ดูแลระบบสูงสุด
                 </div>
             </div>
             
-            <div class="space-y-3">
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Navigation</p>
-                <button onclick="switchTab('bookings'); toggleSidebar();" class="w-full text-left px-5 py-4 rounded-2xl hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 font-semibold transition flex items-center gap-4 group">
-                    <span class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition"><i class="fa-solid fa-calendar-check"></i></span>
-                    รายการจอง
+            <div class="space-y-2">
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 pl-2">การนำทางด่วน</p>
+                <button onclick="switchTab('bookings'); toggleSidebar();" class="w-full text-left px-4 py-3 rounded-xl hover:bg-indigo-50 text-slate-600 hover:text-primary font-medium transition flex items-center gap-3">
+                    <i class="fa-solid fa-calendar-check w-6 text-center"></i> การจอง
                 </button>
-                <button onclick="switchTab('rooms'); toggleSidebar();" class="w-full text-left px-5 py-4 rounded-2xl hover:bg-violet-50 text-slate-600 hover:text-violet-600 font-semibold transition flex items-center gap-4 group">
-                    <span class="w-8 h-8 rounded-lg bg-violet-100 text-violet-600 flex items-center justify-center group-hover:scale-110 transition"><i class="fa-solid fa-door-open"></i></span>
-                    จัดการห้องพัก
+                <button onclick="switchTab('rooms'); toggleSidebar();" class="w-full text-left px-4 py-3 rounded-xl hover:bg-pink-50 text-slate-600 hover:text-secondary font-medium transition flex items-center gap-3">
+                    <i class="fa-solid fa-bed w-6 text-center"></i> ห้องพัก
                 </button>
-                <button onclick="switchTab('users'); toggleSidebar();" class="w-full text-left px-5 py-4 rounded-2xl hover:bg-fuchsia-50 text-slate-600 hover:text-fuchsia-600 font-semibold transition flex items-center gap-4 group">
-                    <span class="w-8 h-8 rounded-lg bg-fuchsia-100 text-fuchsia-600 flex items-center justify-center group-hover:scale-110 transition"><i class="fa-solid fa-users"></i></span>
-                    ผู้ใช้งาน
+                <button onclick="switchTab('users'); toggleSidebar();" class="w-full text-left px-4 py-3 rounded-xl hover:bg-purple-50 text-slate-600 hover:text-accent font-medium transition flex items-center gap-3">
+                    <i class="fa-solid fa-users w-6 text-center"></i> ผู้ใช้
                 </button>
+                <a href="/admin-calendar" class="w-full text-left px-4 py-3 rounded-xl hover:bg-sky-50 text-slate-600 hover:text-sky-600 font-medium transition flex items-center gap-3">
+                    <i class="fa-solid fa-calendar-days w-6 text-center"></i> ปฏิทิน
+                </a>
             </div>
         </div>
         <div class="p-6 border-t border-slate-100 bg-slate-50/50">
-            <button onclick="logout()" class="w-full bg-white border border-red-100 text-red-500 hover:bg-red-500 hover:text-white py-3.5 rounded-2xl font-bold transition shadow-sm hover:shadow-lg hover:shadow-red-200 flex items-center justify-center gap-2 group">
+            <button onclick="logout()" class="w-full bg-white border border-red-100 text-red-500 hover:bg-red-500 hover:text-white py-3 rounded-xl font-bold transition shadow-sm hover:shadow-lg hover:shadow-red-200 flex items-center justify-center gap-2 group text-sm">
                 <i class="fa-solid fa-right-from-bracket group-hover:rotate-180 transition-transform duration-300"></i> ออกจากระบบ
             </button>
         </div>
     </aside>
 
-    <!-- ADD/EDIT ROOM MODAL -->
-    <div id="roomModal" class="fixed inset-0 bg-slate-900/60 z-[100] hidden backdrop-blur-md transition-all duration-300 flex items-center justify-center p-4">
+    <!-- Room Modal -->
+    <div id="roomModal" class="fixed inset-0 bg-slate-900/60 z-[100] hidden backdrop-blur-sm transition-all duration-300 flex items-center justify-center p-4">
         <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col transform scale-95 opacity-0 transition-all duration-300" id="roomModalContent">
             
-            <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-slate-50 to-white">
+            <div class="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-10">
                 <div>
                     <h3 id="roomModalTitle" class="text-2xl font-bold text-slate-800">เพิ่มห้องพักใหม่</h3>
-                    <div class="flex items-center gap-2 mt-1">
-                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                        <p class="text-xs text-slate-500">ระบบตรวจสอบข้อมูลอัตโนมัติ</p>
-                    </div>
+                    <p class="text-xs text-slate-500 mt-1">กรุณากรอกข้อมูลห้องพัก</p>
                 </div>
-                <button onclick="closeRoomModal()" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center transition">
-                    <i class="fa-solid fa-xmark text-xl"></i>
+                <button onclick="closeRoomModal()" class="w-10 h-10 rounded-full bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-800 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
 
-            <div class="p-8 overflow-y-auto custom-scrollbar">
+            <div class="p-8 overflow-y-auto">
                 <form id="roomForm" class="space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         
-                        <div class="space-y-2 relative">
-                            <label class="text-sm font-bold text-slate-700">หมายเลขห้อง <span class="text-red-500">*</span></label>
+                        <div class="space-y-2">
+                            <label class="text-sm font-bold text-slate-700">เลขห้อง <span class="text-red-500">*</span></label>
                             <div class="relative">
-                                <input type="text" id="roomNo" required 
-                                    class="w-full pl-4 pr-10 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition outline-none font-bold text-slate-700" 
-                                    placeholder="เช่น 101" autocomplete="off">
+                                <input type="text" id="roomNo" required class="w-full pl-4 pr-10 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition outline-none font-bold text-slate-700" placeholder="เช่น 101">
                                 <div id="roomNoIcon" class="absolute right-3 top-1/2 -translate-y-1/2 text-lg hidden"></div>
                             </div>
                             <p id="roomNoFeedback" class="text-xs min-h-[1.25rem] font-medium transition-all"></p>
                         </div>
 
                         <div class="space-y-2">
-                            <label class="text-sm font-bold text-slate-700">ประเภทห้อง <span class="text-red-500">*</span></label>
-                            <select id="roomType" required class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition outline-none cursor-pointer">
+                            <label class="text-sm font-bold text-slate-700">ประเภท <span class="text-red-500">*</span></label>
+                            <select id="roomType" required class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition outline-none cursor-pointer">
                                 <option value="">-- เลือกประเภท --</option>
-                                <option value="Standard">Standard (มาตรฐาน)</option>
-                                <option value="VIP">VIP (วีไอพี)</option>
-                                <option value="Suite">Suite (สวีท)</option>
+                                <option value="Standard">Standard</option>
+                                <option value="VIP">VIP</option>
                             </select>
                         </div>
 
                         <div class="space-y-2">
-                            <label class="text-sm font-bold text-slate-700">ราคาต่อคืน (บาท) <span class="text-red-500">*</span></label>
+                            <label class="text-sm font-bold text-slate-700">ราคา (บาท) <span class="text-red-500">*</span></label>
                             <div class="relative">
                                 <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">฿</span>
                                 <input type="number" id="roomRate" required class="w-full pl-8 pr-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition outline-none font-mono" placeholder="1500">
@@ -281,47 +291,48 @@
                         </div>
 
                         <div class="space-y-2">
+                            <label class="text-sm font-bold text-slate-700">จำนวนผู้เข้าพักสูงสุด</label>
+                            <input type="number" id="roomMaxGuests" min="1" max="10" value="2" class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition outline-none">
+                        </div>
+
+                        <div class="space-y-2 md:col-span-2">
                             <label class="text-sm font-bold text-slate-700">สถานะ</label>
-                            <select id="roomStatus" class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition outline-none cursor-pointer">
-                                <option value="ว่าง">✅ ว่าง (Available)</option>
-                                <option value="จองแล้ว">🔒 จองแล้ว (Booked)</option>
-                                <option value="ปิดปรับปรุง">🔧 ปิดปรับปรุง (Maintenance)</option>
+                            <select id="roomStatus" class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition outline-none cursor-pointer">
+                                <option value="ว่าง">✅ ว่าง</option>
+                                <option value="จองแล้ว">🔒 จองแล้ว</option>
+                                <option value="ปิดปรับปรุง">🔧 ปิดปรับปรุง</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="space-y-2">
-                         <label class="text-sm font-bold text-slate-700">รายละเอียด & สิ่งอำนวยความสะดวก</label>
-                         <textarea id="roomDetail" rows="3" class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition outline-none resize-none" placeholder="เช่น เตียง King Size, วิวทะเล, ฟรี Wi-Fi..."></textarea>
+                         <label class="text-sm font-bold text-slate-700">รายละเอียด</label>
+                         <textarea id="roomDescription" rows="3" class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition outline-none resize-none" placeholder="เช่น เตียงคิงไซส์, วิวทะเล..."></textarea>
                     </div>
 
-                    <div class="space-y-4 pt-2 border-t border-slate-100">
+                    <div class="space-y-4 pt-4 border-t border-slate-100">
                         <label class="text-sm font-bold text-slate-700 flex items-center gap-2">
-                            <i class="fa-solid fa-image text-indigo-500"></i> ลิงก์รูปภาพ (URL)
+                            <i class="fa-solid fa-image text-primary"></i> URL รูปภาพ
                         </label>
-                        <input type="url" id="roomImage1" class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-indigo-500 outline-none transition text-sm" placeholder="URL รูปหลัก (Cover Image)">
+                        <input type="url" id="roomImage1" class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary outline-none transition text-sm" placeholder="URL รูปภาพหลัก">
                         <div class="grid grid-cols-3 gap-3">
-                            <input type="url" id="roomImage2" class="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-indigo-500 outline-none text-xs" placeholder="URL รูปเสริม 1">
-                            <input type="url" id="roomImage3" class="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-indigo-500 outline-none text-xs" placeholder="URL รูปเสริม 2">
-                            <input type="url" id="roomImage4" class="w-full px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-indigo-500 outline-none text-xs" placeholder="URL รูปเสริม 3">
+                            <input type="url" id="roomImage2" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary outline-none text-xs" placeholder="รูปที่ 2">
+                            <input type="url" id="roomImage3" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary outline-none text-xs" placeholder="รูปที่ 3">
+                            <input type="url" id="roomImage4" class="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-primary outline-none text-xs" placeholder="รูปที่ 4">
                         </div>
                     </div>
                 </form>
             </div>
 
-            <div class="px-8 py-5 bg-slate-50/80 border-t border-slate-100 flex gap-4 backdrop-blur-sm">
-                <button type="button" onclick="closeRoomModal()" class="flex-1 px-6 py-3.5 rounded-xl font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition shadow-sm">
-                    ยกเลิก
-                </button>
-                <button type="button" id="btnSaveRoom" onclick="submitRoomForm()" class="flex-1 px-6 py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-lg shadow-indigo-200 transition transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none">
-                    <i class="fa-solid fa-save mr-2"></i> บันทึกข้อมูล
+            <div class="px-8 py-5 bg-slate-50 border-t border-slate-100 flex gap-4">
+                <button type="button" onclick="closeRoomModal()" class="flex-1 px-6 py-3 rounded-xl font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition shadow-sm">ยกเลิก</button>
+                <button type="button" id="btnSaveRoom" onclick="submitRoomForm()" class="flex-1 px-6 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-indigo-800 shadow-lg shadow-indigo-200 transition transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-save mr-2"></i> บันทึกห้องพัก
                 </button>
             </div>
         </div>
     </div>
 
-
-    <!-- JAVASCRIPT LOGIC -->
     <script>
         let allBookings = [];
         let allRooms = [];
@@ -329,24 +340,17 @@
         let editingRoomOriginalID = null;
         let isRoomNoValid = true;
 
-        // --- TOAST ---
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            
-            const styles = type === 'error' 
-                ? 'border-l-4 border-red-500 bg-white text-slate-800' 
-                : 'border-l-4 border-green-500 bg-white text-slate-800';
-            
-            const icon = type === 'error' 
-                ? '<i class="fa-solid fa-circle-exclamation text-red-500 text-xl"></i>' 
-                : '<i class="fa-solid fa-circle-check text-green-500 text-xl"></i>';
+            const styles = type === 'error' ? 'border-l-4 border-red-500 bg-white text-slate-800' : 'border-l-4 border-green-500 bg-white text-slate-800';
+            const icon = type === 'error' ? '<i class="fa-solid fa-circle-exclamation text-red-500 text-xl"></i>' : '<i class="fa-solid fa-circle-check text-green-500 text-xl"></i>';
 
             toast.className = `pointer-events-auto w-full p-4 rounded-xl shadow-2xl shadow-slate-200 flex items-start gap-4 transform translate-x-full transition-transform duration-300 ease-out ${styles}`;
             toast.innerHTML = `
                 <div class="shrink-0 mt-0.5">${icon}</div>
                 <div class="flex-1">
-                    <h4 class="font-bold text-sm">${type === 'error' ? 'เกิดข้อผิดพลาด' : 'สำเร็จ'}</h4>
+                    <h4 class="font-bold text-sm">${type === 'error' ? 'ข้อผิดพลาด' : 'สำเร็จ'}</h4>
                     <p class="text-sm text-slate-500 mt-0.5">${message}</p>
                 </div>
                 <button onclick="this.parentElement.remove()" class="text-slate-300 hover:text-slate-500"><i class="fa-solid fa-times"></i></button>
@@ -354,63 +358,68 @@
 
             container.appendChild(toast);
             requestAnimationFrame(() => toast.classList.remove('translate-x-full'));
-
             setTimeout(() => {
                 toast.classList.add('translate-x-full', 'opacity-0');
                 setTimeout(() => toast.remove(), 300);
             }, 4000);
         }
 
-        // --- INIT ---
         async function checkAuth() {
             try {
-                const response = await fetch('/check-session');
+                const response = await fetch('/api/auth/check-session', { credentials: 'include' });
                 const data = await response.json();
-                if (!data.authenticated || data.userType !== 'admin') {
-                    window.location.href = '/login.html';
+                
+                if (!data.loggedIn || data.userType !== 'admin') {
+                    window.location.href = '/login';
                     return;
                 }
-                document.getElementById('navAdminName').textContent = data.email.split('@')[0];
-                document.getElementById('sidebarEmail').textContent = data.email;
+                
+                const profileRes = await fetch('/api/admin/profile', { credentials: 'include' });
+                const profileData = await profileRes.json();
+                
+                if (profileData.success) {
+                    const email = profileData.admin.email;
+                    document.getElementById('navAdminName').textContent = email.split('@')[0];
+                    document.getElementById('sidebarEmail').textContent = email;
+                }
                 
                 loadStats();
                 loadBookings();
             } catch (error) {
-                console.error(error);
-                window.location.href = '/login.html';
+                console.error('Auth error:', error);
+                window.location.href = '/login';
             }
         }
 
         async function loadStats() {
             try {
-                const response = await fetch('/api/admin/stats');
+                const response = await fetch('/api/admin/stats', { credentials: 'include' });
                 const data = await response.json();
-                if (data.success) { renderStats(data.stats); }
-            } catch (error) { console.error(error); }
+                if (data.success) renderStats(data.stats);
+            } catch (error) { 
+                console.error('Stats error:', error); 
+            }
         }
 
         function renderStats(s) {
             const items = [
-                { title: 'ห้องพักทั้งหมด', value: s.totalRooms, icon: 'fa-hotel', color: 'text-indigo-600', bg: 'bg-indigo-50', bar: 'bg-indigo-500', w: '100%' },
-                { title: 'ห้องว่างพร้อมใช้', value: s.availableRooms, icon: 'fa-check-circle', color: 'text-green-600', bg: 'bg-green-50', bar: 'bg-green-500', w: `${(s.availableRooms/s.totalRooms)*100}%` },
-                { title: 'รอการอนุมัติ', value: s.pendingBookings, icon: 'fa-clock', color: 'text-orange-500', bg: 'bg-orange-50', bar: 'bg-orange-500', w: '50%' },
-                { title: 'ผู้ใช้งานรวม', value: s.totalUsers, icon: 'fa-users', color: 'text-fuchsia-600', bg: 'bg-fuchsia-50', bar: 'bg-fuchsia-500', w: '100%' }
+                { title: 'ห้องพักทั้งหมด', value: s.totalRooms, icon: 'fa-hotel', color: 'text-primary', bg: 'bg-indigo-50' },
+               
+                { title: 'รออนุมัติ', value: s.pendingBookings, icon: 'fa-clock', color: 'text-yellow-600', bg: 'bg-yellow-50' },
+                { title: 'ผู้ใช้ทั้งหมด', value: s.totalUsers, icon: 'fa-users', color: 'text-secondary', bg: 'bg-pink-50' }
             ];
 
             const html = items.map(item => `
-                <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition duration-300 group overflow-hidden relative">
-                    <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-white to-slate-100 rounded-bl-full -mr-4 -mt-4 opacity-50 transition-transform group-hover:scale-110"></div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-lg hover:-translate-y-1 transition duration-300 group overflow-hidden relative">
+                    <div class="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-white to-slate-50 rounded-bl-full -mr-4 -mt-4 opacity-50 transition-transform group-hover:scale-110"></div>
                     <div class="flex justify-between items-start relative z-10">
                         <div>
                             <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">${item.title}</p>
-                            <h3 class="text-4xl font-extrabold text-slate-800">${item.value}</h3>
+                            <h3 class="text-3xl font-extrabold text-slate-800">${item.value}</h3>
                         </div>
-                        <div class="w-14 h-14 ${item.bg} rounded-2xl flex items-center justify-center ${item.color} text-2xl shadow-inner group-hover:rotate-12 transition-transform duration-300">
+                        <div class="w-12 h-12 ${item.bg} rounded-xl flex items-center justify-center ${item.color} text-xl shadow-inner">
                             <i class="fa-solid ${item.icon}"></i>
                         </div>
-                    </div>
-                    <div class="w-full bg-slate-100 h-1.5 mt-6 rounded-full overflow-hidden">
-                        <div class="${item.bar} h-full rounded-full transition-all duration-1000" style="width: ${item.w}"></div>
                     </div>
                 </div>
             `).join('');
@@ -421,7 +430,7 @@
             ['bookings', 'rooms', 'users'].forEach(t => {
                 document.getElementById(`content-${t}`).classList.add('hidden');
                 const btn = document.getElementById(`tab-${t}`);
-                btn.classList.remove('text-indigo-600', 'text-violet-600', 'text-fuchsia-600', 'bg-white/80');
+                btn.classList.remove('text-primary', 'text-secondary', 'text-accent', 'bg-white');
                 btn.querySelector('span.absolute').classList.add('scale-x-0');
             });
 
@@ -430,8 +439,8 @@
             content.classList.add('fade-in');
             
             const activeBtn = document.getElementById(`tab-${tabName}`);
-            const color = tabName === 'bookings' ? 'text-indigo-600' : (tabName === 'rooms' ? 'text-violet-600' : 'text-fuchsia-600');
-            activeBtn.classList.add(color, 'bg-white/80');
+            const color = tabName === 'bookings' ? 'text-primary' : (tabName === 'rooms' ? 'text-secondary' : 'text-accent');
+            activeBtn.classList.add(color, 'bg-white');
             activeBtn.querySelector('span.absolute').classList.remove('scale-x-0');
 
             if (tabName === 'bookings') loadBookings();
@@ -453,13 +462,12 @@
             }
         }
 
-        // --- BOOKINGS ---
         async function loadBookings() {
             try {
-                const res = await fetch('/api/admin/bookings');
+                const res = await fetch('/api/admin/bookings', { credentials: 'include' });
                 const data = await res.json();
                 if(data.success) { allBookings = data.bookings; filterBookings(); }
-            } catch(e) { console.error(e); }
+            } catch(e) { console.error('Bookings error:', e); }
         }
 
         function filterBookings() {
@@ -471,21 +479,21 @@
         function renderBookingsTable(list) {
             const container = document.getElementById('bookingsTable');
             if(list.length === 0) {
-                container.innerHTML = `<div class="p-12 text-center text-slate-400"><i class="fa-solid fa-inbox text-5xl mb-4 opacity-20"></i><p>ไม่พบข้อมูลการจอง</p></div>`;
+                container.innerHTML = `<div class="p-12 text-center text-slate-400"><i class="fa-solid fa-inbox text-5xl mb-4 opacity-20"></i><p>ไม่พบการจอง</p></div>`;
                 return;
             }
-            let html = `<table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-slate-500 text-xs uppercase font-bold tracking-wider"><tr><th class="p-5">ID</th><th class="p-5">ผู้จอง</th><th class="p-5">ห้องพัก</th><th class="p-5">วันที่เข้า-ออก</th><th class="p-5">ยอดรวม</th><th class="p-5 text-center">สถานะ</th><th class="p-5 text-center">จัดการ</th></tr></thead><tbody class="text-slate-700 divide-y divide-slate-100">`;
+            let html = `<table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-slate-500 text-xs uppercase font-bold tracking-wider"><tr><th class="p-5">รหัส</th><th class="p-5">ผู้เข้าพัก</th><th class="p-5">ห้อง</th><th class="p-5">วันที่</th><th class="p-5">ยอดรวม</th><th class="p-5 text-center">สถานะ</th><th class="p-5 text-center">การจัดการ</th></tr></thead><tbody class="text-slate-700 divide-y divide-slate-100">`;
             list.forEach(b => {
-                const statusStyle = b.Status === 'อนุมัติแล้ว' ? 'bg-green-100 text-green-700 border-green-200' : b.Status === 'ยกเลิก' ? 'bg-red-100 text-red-700 border-red-200' : 'bg-orange-100 text-orange-700 border-orange-200 animate-pulse';
+                const statusStyle = b.Status === 'อนุมัติแล้ว' ? 'bg-green-100 text-green-700' : b.Status === 'ยกเลิก' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700';
                 html += `
-                    <tr class="hover:bg-slate-50/80 transition-colors">
-                        <td class="p-5 font-bold text-indigo-600">#${b.Book_ID}</td>
-                        <td class="p-5"><div class="font-bold text-slate-800">${b.User_ID}</div><div class="text-xs text-slate-400">Customer</div></td>
-                        <td class="p-5"><span class="bg-white border border-slate-200 px-2 py-1 rounded-lg font-mono font-bold text-slate-600">${b.Room_No}</span></td>
-                        <td class="p-5 text-sm"><div class="flex items-center gap-2"><i class="fa-solid fa-arrow-right-to-bracket text-green-400"></i> ${b.Check_in}</div><div class="flex items-center gap-2 mt-1"><i class="fa-solid fa-arrow-right-from-bracket text-red-400"></i> ${b.Check_out}</div></td>
-                        <td class="p-5 font-bold text-violet-600">฿${Number(b.Total).toLocaleString()}</td>
-                        <td class="p-5 text-center"><span class="px-3 py-1 rounded-full text-xs font-bold border ${statusStyle}">${b.Status}</span></td>
-                        <td class="p-5 text-center">${b.Status === 'รออนุมัติ' ? `<div class="flex justify-center gap-2"><button onclick="updateBooking('${b.Book_ID}', 'approve')" class="w-8 h-8 rounded-lg bg-green-50 text-green-600 hover:bg-green-500 hover:text-white transition shadow-sm"><i class="fa-solid fa-check"></i></button><button onclick="updateBooking('${b.Book_ID}', 'reject')" class="w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition shadow-sm"><i class="fa-solid fa-xmark"></i></button></div>` : `<span class="text-slate-300 text-xl">•</span>`}</td>
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-5 font-bold text-primary">#${b.Book_ID}</td>
+                        <td class="p-5"><div class="font-bold text-slate-800">${b.Name || b.User_ID} ${b.LastName || ''}</div><div class="text-xs text-slate-400">${b.mail || 'ผู้เข้าพัก'}</div></td>
+                        <td class="p-5"><span class="bg-white border border-slate-200 px-2 py-1 rounded font-mono font-bold text-slate-600">${b.Room_No}</span></td>
+                        <td class="p-5 text-sm"><div class="text-slate-500">เข้า: <span class="text-slate-700 font-medium">${b.Check_in}</span></div><div class="text-slate-500">ออก: <span class="text-slate-700 font-medium">${b.Check_out}</span></div></td>
+                        <td class="p-5 font-bold text-slate-700">฿${Number(b.Total).toLocaleString()}</td>
+                        <td class="p-5 text-center"><span class="px-3 py-1 rounded-full text-xs font-bold ${statusStyle}">${b.Status}</span></td>
+                        <td class="p-5 text-center">${b.Status === 'รออนุมัติ' ? `<div class="flex justify-center gap-2"><button onclick="updateBooking('${b.Book_ID}', 'approve')" class="w-8 h-8 rounded-lg bg-green-50 text-green-600 hover:bg-green-500 hover:text-white transition shadow-sm" title="อนุมัติ"><i class="fa-solid fa-check"></i></button><button onclick="updateBooking('${b.Book_ID}', 'reject')" class="w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-500 hover:text-white transition shadow-sm" title="ปฏิเสธ"><i class="fa-solid fa-xmark"></i></button></div>` : `<span class="text-slate-300">•</span>`}</td>
                     </tr>`;
             });
             html += `</tbody></table>`;
@@ -493,139 +501,139 @@
         }
 
         async function updateBooking(id, action) {
-            if(!confirm(`ยืนยันการ ${action === 'approve' ? 'อนุมัติ' : 'ปฏิเสธ'}?`)) return;
+            const actionText = action === 'approve' ? 'อนุมัติ' : 'ยกเลิก';
+            const result = await Swal.fire({
+                title: `ยืนยันการ${actionText}?`,
+                text: `คุณต้องการ${actionText}การจองนี้ใช่หรือไม่?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: `ใช่, ${actionText}`,
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: action === 'approve' ? '#10b981' : '#ef4444'
+            });
+
+            if (!result.isConfirmed) return;
+
             try {
-                const res = await fetch(`/api/admin/bookings/${id}/${action}`, { method: 'PUT' });
+                const res = await fetch(`/api/admin/bookings/${id}/${action}`, { 
+                    method: 'PUT',
+                    credentials: 'include'
+                });
                 const d = await res.json();
-                if(d.success) { showToast('อัปเดตสำเร็จ', 'success'); loadBookings(); loadStats(); }
-                else { showToast(d.message, 'error'); }
-            } catch(e) { showToast('เชื่อมต่อผิดพลาด', 'error'); }
+                if(d.success) { 
+                    Swal.fire({ icon: 'success', title: 'สำเร็จ', text: `${actionText}การจองเรียบร้อย`, timer: 1500, showConfirmButton: false });
+                    loadBookings(); 
+                    loadStats(); 
+                } else { 
+                    Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: d.message });
+                }
+            } catch(e) { 
+                Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: 'เกิดข้อผิดพลาดในการเชื่อมต่อ' });
+            }
         }
 
-        // --- ROOMS ---
         async function loadRooms() {
             try {
-                const res = await fetch('/api/admin/rooms');
+                const res = await fetch('/api/admin/rooms', { credentials: 'include' });
                 const data = await res.json();
                 if(data.success) { allRooms = data.rooms; renderRoomsGrid(allRooms); }
-            } catch(e) { console.error(e); }
+            } catch(e) { console.error('Rooms error:', e); }
         }
 
         function renderRoomsGrid(list) {
             const container = document.getElementById('roomsGrid');
             if(list.length === 0) {
-                container.innerHTML = `<div class="col-span-full text-center py-20 text-slate-400"><i class="fa-solid fa-folder-open text-5xl mb-4 opacity-30"></i><p>ยังไม่มีข้อมูลห้องพัก</p></div>`;
+                container.innerHTML = `<div class="col-span-full text-center py-20 text-slate-400"><i class="fa-solid fa-folder-open text-5xl mb-4 opacity-30"></i><p>ไม่พบห้องพัก</p></div>`;
                 return;
             }
             container.innerHTML = list.map(r => `
-                <div class="group bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 overflow-hidden relative">
-                    <div class="relative h-60 overflow-hidden">
-                        <img src="${r.Image1 || 'https://via.placeholder.com/400?text=No+Image'}" class="w-full h-full object-cover group-hover:scale-110 transition duration-700" alt="Room">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-80"></div>
-                        <div class="absolute top-4 right-4 flex gap-2">
-                             <span class="px-3 py-1 rounded-full text-xs font-bold text-white backdrop-blur-md ${r.Status === 'ว่าง' ? 'bg-green-500/80' : (r.Status === 'จองแล้ว' ? 'bg-red-500/80' : 'bg-slate-500/80')} shadow-lg border border-white/20">${r.Status}</span>
+                <div class="card-hover bg-white rounded-2xl border border-white shadow-sm overflow-hidden relative group">
+                    <div class="relative h-48 overflow-hidden">
+                        <img src="${r.Image1 || 'https://via.placeholder.com/400x300/6366f1/ffffff?text=No+Image'}" onerror="this.src='https://via.placeholder.com/400x300/6366f1/ffffff?text=Image+Error'" class="w-full h-full object-cover" alt="ห้อง ${r.Room_No}">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                        <div class="absolute top-3 right-3">
+                             <span class="px-2 py-1 rounded text-xs font-bold text-white ${r.Status === 'ว่าง' ? 'bg-green-500' : (r.Status === 'จองแล้ว' ? 'bg-red-500' : 'bg-slate-500')}">${r.Status}</span>
                         </div>
-                        <div class="absolute bottom-4 left-4 text-white">
-                            <p class="text-xs font-bold bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-lg inline-block mb-1 border border-white/30">${r.Type}</p>
-                            <h3 class="text-3xl font-extrabold tracking-tight">ห้อง ${r.Room_No}</h3>
+                        <div class="absolute bottom-3 left-3 text-white">
+                            <h3 class="text-2xl font-bold">ห้อง ${r.Room_No}</h3>
+                            <span class="text-xs bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded">${r.Type === 'Standard' ? 'Standard' : ' VIP'}</span>
                         </div>
                     </div>
-                    <div class="p-6">
-                        <div class="flex justify-between items-end mb-4 border-b border-slate-50 pb-4">
-                            <div class="text-slate-500 text-sm line-clamp-2 pr-2">${r.Detail || 'ไม่มีรายละเอียด'}</div>
-                            <div class="font-bold text-violet-600 text-xl whitespace-nowrap">฿${Number(r.Rate).toLocaleString()}</div>
+                    <div class="p-5">
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="text-sm text-slate-500"><i class="fa-solid fa-user-group"></i> สูงสุด ${r.Max_Guests || 2} คน</div>
+                            <div class="font-bold text-primary text-lg">฿${Number(r.Rate).toLocaleString()}</div>
                         </div>
                         <div class="grid grid-cols-3 gap-2">
-                            <button onclick="editRoom('${r.Room_No}')" class="py-2.5 rounded-xl bg-slate-800 text-white text-sm font-bold hover:bg-slate-700 shadow-md transition flex items-center justify-center gap-2"><i class="fa-solid fa-pen-to-square"></i> <span class="hidden sm:inline">แก้ไข</span></button>
-                            <button onclick="toggleRoomStatus('${r.Room_No}')" class="py-2.5 rounded-xl bg-orange-50 text-orange-600 text-sm font-bold hover:bg-orange-100 border border-orange-100 transition flex items-center justify-center gap-2"><i class="fa-solid fa-rotate"></i> <span class="hidden sm:inline">สถานะ</span></button>
-                            <button onclick="deleteRoom('${r.Room_No}')" class="py-2.5 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600 border border-red-100 transition flex items-center justify-center"><i class="fa-solid fa-trash-can"></i></button>
+                            <button onclick="editRoom('${r.Room_No}')" class="py-2 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 text-sm font-medium transition"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="toggleRoomStatus('${r.Room_No}')" class="py-2 rounded-lg bg-yellow-50 text-yellow-600 hover:bg-yellow-100 text-sm font-medium transition"><i class="fa-solid fa-sync"></i></button>
+                            <button onclick="deleteRoom('${r.Room_No}')" class="py-2 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 text-sm font-medium transition"><i class="fa-solid fa-trash"></i></button>
                         </div>
                     </div>
                 </div>
             `).join('');
         }
 
-        // --- แก้ไขจุดที่ 1: Toggle Room Status รูปหาย ---
         async function toggleRoomStatus(no) {
             const room = allRooms.find(r => r.Room_No === no);
-            const next = room.Status === 'ว่าง' ? 'จองแล้ว' : 'ว่าง';
+            if (!room) return;
+
+            const next = room.Status === 'ว่าง' ? 'จองแล้ว' : (room.Status === 'จองแล้ว' ? 'ปิดปรับปรุง' : 'ว่าง');
             
-            // สร้าง Payload ให้ครบถ้วนเหมือน Submit Form เพื่อไม่ให้รูปภาพหาย
+            const result = await Swal.fire({
+                title: 'เปลี่ยนสถานะห้อง?',
+                text: `เปลี่ยนสถานะเป็น "${next}" ใช่หรือไม่?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'ยืนยัน',
+                cancelButtonText: 'ยกเลิก'
+            });
+
+            if (!result.isConfirmed) return;
+
             const payload = {
-                roomNo: room.Room_No,
+                rate: parseFloat(room.Rate),
                 type: room.Type,
-                rate: room.Rate,
-                status: next,
-                detail: room.Detail,
-                image1: room.Image1, // ส่งรูปเดิมกลับไป
-                image2: room.Image2,
-                image3: room.Image3,
-                image4: room.Image4
+                maxGuests: parseInt(room.Max_Guests) || 2,
+                description: room.Description || '',
+                image1: room.Image1 || '',
+                image2: room.Image2 || '',
+                image3: room.Image3 || '',
+                image4: room.Image4 || '',
+                status: next
             };
 
             try {
                 const res = await fetch(`/api/admin/rooms/${no}`, {
                     method: 'PUT', 
-                    headers: {'Content-Type': 'application/json'}, 
+                    headers: {'Content-Type': 'application/json'},
+                    credentials: 'include',
                     body: JSON.stringify(payload)
                 });
-                if((await res.json()).success) { 
-                    showToast('สถานะอัปเดตแล้ว', 'success'); 
+                const data = await res.json();
+                
+                if(data.success) { 
+                    Swal.fire({ icon: 'success', title: 'สำเร็จ', text: `เปลี่ยนสถานะเป็น "${next}" แล้ว`, timer: 1500, showConfirmButton: false });
                     loadRooms(); 
                     loadStats(); 
+                } else {
+                    Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: data.message });
                 }
             } catch(e) { 
-                showToast('Error updating status', 'error'); 
+                Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: 'เกิดข้อผิดพลาดในการเชื่อมต่อ' });
             }
         }
-
-        document.getElementById('roomNo').addEventListener('input', function() {
-            const val = this.value.trim();
-            const icon = document.getElementById('roomNoIcon');
-            const feedback = document.getElementById('roomNoFeedback');
-            const btnSave = document.getElementById('btnSaveRoom');
-
-            if (!val) {
-                icon.classList.add('hidden');
-                feedback.textContent = '';
-                this.classList.remove('border-green-500', 'border-red-500', 'bg-green-50', 'bg-red-50');
-                isRoomNoValid = false;
-                return;
-            }
-
-            const exists = allRooms.some(r => r.Room_No === val);
-            const isSelf = editingRoomOriginalID && editingRoomOriginalID === val;
-
-            icon.classList.remove('hidden', 'text-green-500', 'text-red-500', 'fa-circle-check', 'fa-circle-xmark');
-            this.classList.remove('border-green-500', 'border-red-500', 'bg-green-50', 'bg-red-50');
-
-            if (exists && !isSelf) {
-                icon.classList.add('fa-circle-xmark', 'text-red-500');
-                this.classList.add('border-red-500', 'bg-red-50');
-                feedback.textContent = `❌ หมายเลขห้อง ${val} มีอยู่ในระบบแล้ว`;
-                feedback.className = 'text-xs min-h-[1.25rem] font-medium transition-all text-red-500 mt-1';
-                isRoomNoValid = false;
-                btnSave.disabled = true;
-            } else {
-                icon.classList.add('fa-circle-check', 'text-green-500');
-                this.classList.add('border-green-500', 'bg-green-50');
-                feedback.textContent = `✅ สามารถใช้หมายเลขห้องนี้ได้`;
-                feedback.className = 'text-xs min-h-[1.25rem] font-medium transition-all text-green-500 mt-1';
-                isRoomNoValid = true;
-                btnSave.disabled = false;
-            }
-        });
 
         function showAddRoomModal() {
             editingRoomOriginalID = null;
             document.getElementById('roomModalTitle').textContent = 'เพิ่มห้องพักใหม่';
             document.getElementById('roomForm').reset();
-            
             document.getElementById('roomNo').disabled = false;
             document.getElementById('roomNo').classList.remove('border-green-500', 'border-red-500', 'bg-green-50', 'bg-red-50');
             document.getElementById('roomNoIcon').classList.add('hidden');
             document.getElementById('roomNoFeedback').textContent = '';
-            isRoomNoValid = false; 
+            document.getElementById('btnSaveRoom').disabled = true;
+            isRoomNoValid = false;
 
             const modal = document.getElementById('roomModal');
             const content = document.getElementById('roomModalContent');
@@ -640,22 +648,28 @@
             const r = allRooms.find(item => item.Room_No === no);
             if(!r) return;
             
-            showAddRoomModal();
             editingRoomOriginalID = no;
-            document.getElementById('roomModalTitle').textContent = `แก้ไขห้องพัก ${no}`;
+            document.getElementById('roomModalTitle').textContent = `แก้ไขห้อง ${no}`;
             document.getElementById('roomNo').value = r.Room_No;
             document.getElementById('roomNo').disabled = false;
-            
             document.getElementById('roomType').value = r.Type;
             document.getElementById('roomRate').value = r.Rate;
+            document.getElementById('roomMaxGuests').value = r.Max_Guests || 2;
             document.getElementById('roomStatus').value = r.Status;
-            document.getElementById('roomDetail').value = r.Detail || '';
+            document.getElementById('roomDescription').value = r.Description || '';
             document.getElementById('roomImage1').value = r.Image1 || '';
             document.getElementById('roomImage2').value = r.Image2 || '';
             document.getElementById('roomImage3').value = r.Image3 || '';
             document.getElementById('roomImage4').value = r.Image4 || '';
 
-            document.getElementById('roomNo').dispatchEvent(new Event('input'));
+            const modal = document.getElementById('roomModal');
+            const content = document.getElementById('roomModalContent');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+                document.getElementById('roomNo').dispatchEvent(new Event('input'));
+            }, 10);
         }
 
         function closeRoomModal() {
@@ -666,105 +680,138 @@
             setTimeout(() => modal.classList.add('hidden'), 300);
         }
 
-        function submitRoomForm() {
-            const newRoomNo = document.getElementById('roomNo').value;
-            if(!isRoomNoValid && !editingRoomOriginalID) { showToast('กรุณาตรวจสอบหมายเลขห้อง', 'error'); return; }
+        async function submitRoomForm() {
+            const roomNo = document.getElementById('roomNo').value.trim();
+            const roomType = document.getElementById('roomType').value;
+            const roomRate = document.getElementById('roomRate').value;
+            const roomMaxGuests = document.getElementById('roomMaxGuests').value;
+            const roomStatus = document.getElementById('roomStatus').value;
+            const roomDescription = document.getElementById('roomDescription').value.trim();
+
+            if (!roomNo || (!editingRoomOriginalID && !isRoomNoValid) || !roomType || !roomRate) {
+                Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: 'กรุณากรอกข้อมูลให้ครบถ้วน' });
+                return;
+            }
 
             const data = {
-                roomNo: newRoomNo,
-                type: document.getElementById('roomType').value,
-                rate: document.getElementById('roomRate').value,
-                status: document.getElementById('roomStatus').value,
-                detail: document.getElementById('roomDetail').value,
-                image1: document.getElementById('roomImage1').value,
-                image2: document.getElementById('roomImage2').value,
-                image3: document.getElementById('roomImage3').value,
-                image4: document.getElementById('roomImage4').value
+                roomNo: roomNo,
+                type: roomType,
+                rate: parseFloat(roomRate),
+                maxGuests: parseInt(roomMaxGuests) || 2,
+                status: roomStatus,
+                description: roomDescription,
+                image1: document.getElementById('roomImage1').value.trim(),
+                image2: document.getElementById('roomImage2').value.trim(),
+                image3: document.getElementById('roomImage3').value.trim(),
+                image4: document.getElementById('roomImage4').value.trim()
             };
-
-            if(!data.roomNo || !data.rate) { showToast('ข้อมูลไม่ครบถ้วน', 'error'); return; }
 
             const method = editingRoomOriginalID ? 'PUT' : 'POST';
             const url = editingRoomOriginalID ? `/api/admin/rooms/${editingRoomOriginalID}` : '/api/admin/rooms';
 
-            fetch(url, {
-                method: method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            })
-            .then(res => res.json())
-            .then(d => {
-                if(d.success) {
-                    showToast('บันทึกข้อมูลเรียบร้อย', 'success');
+            try {
+                const btnSave = document.getElementById('btnSaveRoom');
+                btnSave.disabled = true;
+                btnSave.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> กำลังบันทึก...';
+
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await res.json();
+                btnSave.disabled = false;
+                btnSave.innerHTML = '<i class="fa-solid fa-save mr-2"></i> บันทึกห้องพัก';
+
+                if(result.success) {
+                    Swal.fire({ icon: 'success', title: 'สำเร็จ', text: 'บันทึกข้อมูลห้องเรียบร้อย', timer: 1500, showConfirmButton: false });
                     closeRoomModal();
                     loadRooms();
                     loadStats();
                 } else {
-                    showToast(d.message, 'error');
+                    Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: result.message });
                 }
-            })
-            .catch(err => {
-                showToast('การเชื่อมต่อล้มเหลว', 'error');
-            });
+            } catch(err) {
+                Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: 'เกิดข้อผิดพลาดในการเชื่อมต่อ' });
+                const btnSave = document.getElementById('btnSaveRoom');
+                btnSave.disabled = false;
+                btnSave.innerHTML = '<i class="fa-solid fa-save mr-2"></i> บันทึกห้องพัก';
+            }
         }
 
         async function deleteRoom(no) {
-            if(!confirm(`⚠️ คำเตือน: ต้องการลบห้อง ${no} อย่างถาวรใช่หรือไม่?`)) return;
+            const result = await Swal.fire({
+                title: 'ลบห้องพัก?',
+                text: `คุณต้องการลบห้อง ${no} ใช่หรือไม่?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'ใช่, ลบเลย',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#ef4444'
+            });
+
+            if (!result.isConfirmed) return;
+
             try {
-                await fetch(`/api/admin/rooms/${no}`, { method: 'DELETE' });
-                showToast(`ลบห้อง ${no} แล้ว`, 'success'); loadRooms(); loadStats();
-            } catch(e) { showToast('ลบไม่สำเร็จ', 'error'); }
+                const res = await fetch(`/api/admin/rooms/${no}`, { 
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    Swal.fire({ icon: 'success', title: 'สำเร็จ', text: `ลบห้อง ${no} เรียบร้อย`, timer: 1500, showConfirmButton: false });
+                    loadRooms(); 
+                    loadStats();
+                } else {
+                    Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: data.message });
+                }
+            } catch(e) { 
+                Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: 'เกิดข้อผิดพลาดในการเชื่อมต่อ' });
+            }
         }
 
-        // --- USERS ---
         async function loadUsers() {
             try {
-                const res = await fetch('/api/admin/users');
+                const res = await fetch('/api/admin/users', { credentials: 'include' });
                 const data = await res.json();
                 if(data.success) { allUsers = data.users; renderUsersTable(allUsers); }
-            } catch(e) { console.error(e); }
+            } catch(e) { console.error('Users error:', e); }
         }
 
         function filterUsers() {
             const q = document.getElementById('userSearch').value.toLowerCase();
-            const filtered = allUsers.filter(u => u.User_ID.toLowerCase().includes(q) || u.Name.toLowerCase().includes(q) || (u.Mail && u.Mail.toLowerCase().includes(q)));
+            const filtered = allUsers.filter(u => 
+                u.User_ID.toLowerCase().includes(q) || 
+                u.Name.toLowerCase().includes(q) || 
+                u.LastName.toLowerCase().includes(q) ||
+                (u.mail && u.mail.toLowerCase().includes(q)) ||
+                (u.Tel && u.Tel.includes(q))
+            );
             renderUsersTable(filtered);
         }
 
-        // --- แก้ไขจุดที่ 2: เพิ่มการแสดงผล Email ---
         function renderUsersTable(list) {
             const container = document.getElementById('usersTable');
-            if(list.length === 0) { container.innerHTML = '<div class="p-8 text-center text-slate-400">ไม่พบข้อมูล</div>'; return; }
-            let html = `
-                <table class="w-full text-left border-collapse">
-                    <thead class="bg-slate-50 text-slate-500 text-xs uppercase font-bold">
-                        <tr>
-                            <th class="p-4">User ID</th>
-                            <th class="p-4">ชื่อ-นามสกุล</th>
-                            <th class="p-4">อีเมล</th>
-                            <th class="p-4">เบอร์โทร</th>
-                            <th class="p-4 text-center">จัดการ</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-slate-700 divide-y divide-slate-100">
-            `;
+            if(list.length === 0) { 
+                container.innerHTML = '<div class="p-8 text-center text-slate-400"><i class="fa-solid fa-user-slash text-4xl mb-3 opacity-30"></i><p>ไม่พบผู้ใช้</p></div>'; 
+                return; 
+            }
+            let html = `<table class="w-full text-left border-collapse"><thead class="bg-slate-50 text-slate-500 text-xs uppercase font-bold"><tr><th class="p-4">รหัสผู้ใช้</th><th class="p-4">ชื่อ</th><th class="p-4">อีเมล</th><th class="p-4">โทรศัพท์</th><th class="p-4 text-center">การจัดการ</th></tr></thead><tbody class="text-slate-700 divide-y divide-slate-100">`;
             list.forEach(u => {
                 html += `
                     <tr class="hover:bg-slate-50 transition">
-                        <td class="p-4 font-bold text-indigo-600">${u.User_ID}</td>
+                        <td class="p-4 font-bold text-primary">${u.User_ID}</td>
                         <td class="p-4 font-medium flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-400 to-fuchsia-400 text-white flex items-center justify-center font-bold text-xs">${u.Name.charAt(0)}</div>
+                            <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs">${u.Name.charAt(0)}</div>
                             ${u.Name} ${u.LastName}
                         </td>
-                        <td class="p-4 text-sm text-slate-600">
-                            <div class="flex items-center gap-2">
-                                <i class="fa-solid fa-envelope text-slate-400"></i>
-                                ${u.Mail || '<span class="text-slate-300">ไม่ระบุ</span>'}
-                            </div>
-                        </td>
+                        <td class="p-4 text-sm text-slate-600">${u.mail || '-'}</td>
                         <td class="p-4 text-sm font-mono">${u.Tel}</td>
                         <td class="p-4 text-center">
-                            <button onclick="deleteUser('${u.User_ID}')" class="w-8 h-8 rounded-lg text-red-400 hover:text-white hover:bg-red-500 transition shadow-sm" title="ลบผู้ใช้"><i class="fa-solid fa-trash"></i></button>
+                            <button onclick="deleteUser('${u.User_ID}')" class="w-8 h-8 rounded text-red-400 hover:text-white hover:bg-red-500 transition" title="ลบ"><i class="fa-solid fa-trash"></i></button>
                         </td>
                     </tr>`;
             });
@@ -773,17 +820,104 @@
         }
 
         async function deleteUser(id) {
-            if(!confirm(`ต้องการลบผู้ใช้ ${id}?`)) return;
-            try { await fetch(`/api/admin/users/${id}`, { method: 'DELETE' }); showToast('ลบผู้ใช้เรียบร้อย', 'success'); loadUsers(); loadStats(); } 
-            catch(e) { showToast('ผิดพลาด', 'error'); }
+            const result = await Swal.fire({
+                title: 'ลบผู้ใช้?',
+                text: `คุณต้องการลบผู้ใช้ ${id} ใช่หรือไม่?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'ใช่, ลบเลย',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#ef4444'
+            });
+
+            if (!result.isConfirmed) return;
+
+            try { 
+                const res = await fetch(`/api/admin/users/${id}`, { 
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    Swal.fire({ icon: 'success', title: 'สำเร็จ', text: 'ลบผู้ใช้เรียบร้อย', timer: 1500, showConfirmButton: false });
+                    loadUsers(); 
+                    loadStats();
+                } else {
+                    Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: data.message });
+                }
+            } catch(e) { 
+                Swal.fire({ icon: 'error', title: 'ผิดพลาด', text: 'เกิดข้อผิดพลาดในการเชื่อมต่อ' });
+            }
         }
 
         async function logout() {
-            if(!confirm('ยืนยันออกจากระบบ?')) return;
-            try { await fetch('/logout', { method: 'POST' }); window.location.href = '/login.html'; } catch(e){}
+            const result = await Swal.fire({
+                title: 'ออกจากระบบ?',
+                text: 'คุณต้องการออกจากระบบใช่หรือไม่?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'ออกจากระบบ',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#ef4444'
+            });
+
+            if (!result.isConfirmed) return;
+
+            try { 
+                await fetch('/logout', { method: 'POST' }); 
+                window.location.href = '/login'; 
+            } catch(e){
+                console.error('Logout error:', e);
+            }
         }
 
-        window.addEventListener('DOMContentLoaded', checkAuth);
+        // Room number validation
+        document.addEventListener('DOMContentLoaded', function() {
+            const roomNoInput = document.getElementById('roomNo');
+            if (roomNoInput) {
+                roomNoInput.addEventListener('input', function() {
+                    const val = this.value.trim();
+                    const icon = document.getElementById('roomNoIcon');
+                    const feedback = document.getElementById('roomNoFeedback');
+                    const btnSave = document.getElementById('btnSaveRoom');
+
+                    if (!val) {
+                        icon.classList.add('hidden');
+                        feedback.textContent = '';
+                        this.classList.remove('border-green-500', 'border-red-500', 'bg-green-50', 'bg-red-50');
+                        isRoomNoValid = false;
+                        btnSave.disabled = true;
+                        return;
+                    }
+
+                    const exists = allRooms.some(r => r.Room_No === val);
+                    const isSelf = editingRoomOriginalID && editingRoomOriginalID === val;
+
+                    icon.classList.remove('hidden', 'text-green-500', 'text-red-500', 'fa-circle-check', 'fa-circle-xmark');
+                    this.classList.remove('border-green-500', 'border-red-500', 'bg-green-50', 'bg-red-50');
+
+                    if (exists && !isSelf) {
+                        icon.classList.add('fa-circle-xmark', 'text-red-500');
+                        this.classList.add('border-red-500', 'bg-red-50');
+                        feedback.textContent = `❌ ห้อง ${val} มีอยู่แล้ว`;
+                        feedback.className = 'text-xs min-h-[1.25rem] font-medium transition-all text-red-500 mt-1';
+                        isRoomNoValid = false;
+                        btnSave.disabled = true;
+                    } else {
+                        icon.classList.add('fa-circle-check', 'text-green-500');
+                        this.classList.add('border-green-500', 'bg-green-50');
+                        feedback.textContent = `✅ ใช้ได้`;
+                        feedback.className = 'text-xs min-h-[1.25rem] font-medium transition-all text-green-500 mt-1';
+                        isRoomNoValid = true;
+                        btnSave.disabled = false;
+                    }
+                });
+            }
+
+            checkAuth();
+        });
     </script>
+    
 </body>
 </html>

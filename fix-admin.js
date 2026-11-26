@@ -4,7 +4,7 @@ const mysql = require('mysql2');
 const db = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "", // รหัสผ่าน MySQL ของคุณ
+  password: "1234", // รหัสผ่าน MySQL ของคุณ
   database: "auth_system"
 });
 
